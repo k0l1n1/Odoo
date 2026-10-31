@@ -7,7 +7,8 @@ import Input from '../../components/common/Input';
 import Toast from '../../components/common/Toast';
 import InvoiceModal from '../../components/invoices/InvoiceModal';
 import { invoicesApi } from '../../services/api';
-import { Search, FileText, Printer, CheckCircle, RefreshCw, Eye } from 'lucide-react';
+import { Search, FileText, Printer, CheckCircle, RefreshCw, Eye, Download } from 'lucide-react';
+import { downloadInvoicePdf } from '../../utils/invoicePdf';
 
 export default function InvoiceManagement() {
   const [invoices, setInvoices] = useState([]);
@@ -132,6 +133,24 @@ export default function InvoiceManagement() {
             onClick={() => setSelectedInvoice(row)}
           >
             View
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            icon={Download}
+            title="Download PDF"
+            onClick={async () => {
+              try {
+                await downloadInvoicePdf(row.id, row.invoice_number);
+                setToast({ type: 'success', message: `Downloaded Invoice #${row.invoice_number}.pdf` });
+              } catch (e) {
+                setToast({ type: 'error', message: 'Failed to download invoice PDF' });
+              }
+            }}
+          >
+            PDF
           </Button>
 
           {row.payment_status !== 'paid' && (

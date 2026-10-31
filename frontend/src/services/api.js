@@ -69,7 +69,8 @@ export const invoicesApi = {
   getAll: (params) => api.get('/invoices', { params }),
   getMy: () => api.get('/invoices/my'),
   getById: (id) => api.get(`/invoices/${id}`),
-  updateStatus: (id, status) => api.patch(`/invoices/${id}/status`, { status })
+  updateStatus: (id, status) => api.patch(`/invoices/${id}/status`, { status }),
+  downloadPdf: (id) => api.get(`/invoices/${id}/download`, { responseType: 'blob' })
 };
 
 // Payments endpoints

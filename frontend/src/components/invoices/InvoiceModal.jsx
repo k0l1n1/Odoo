@@ -1,14 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
-import { Printer, Download, CreditCard, Layers, CheckCircle2, Shield } from 'lucide-react';
+import { Printer, Download, CreditCard, Layers, CheckCircle2, Shield, Loader2 } from 'lucide-react';
+import { downloadInvoicePdf, printInvoiceDocument } from '../../utils/invoicePdf';
 
 export default function InvoiceModal({ isOpen, onClose, invoice, onPayNow }) {
+  const [downloading, setDownloading] = useState(false);
+
   if (!invoice) return null;
 
   const handlePrint = () => {
-    window.print();
+    printInvoiceDocument(invoice);
+  };
+
+  const handleDownload = async () => {
+    try {
+      setDownloading(true);
+      await downloadInvoicePdf(invoice.id, invoice.invoice_number);
+    } catch (err) {
+      console.error('Download error:', err);
+      // Fallback to print if download fails
+      printInvoiceDocument(invoice);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const isUnpaid = invoice.payment_status === 'pending' || invoice.payment_status === 'overdue';
@@ -119,6 +135,17 @@ export default function InvoiceModal({ isOpen, onClose, invoice, onPayNow }) {
       {/* Action Buttons in Modal footer */}
       <div className="no-print mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            icon={Download}
+            disabled={downloading}
+            onClick={handleDownload}
+          >
+            {downloading ? 'Downloading...' : 'Download PDF'}
+          </Button>
+
           <Button
             type="button"
             variant="outline"

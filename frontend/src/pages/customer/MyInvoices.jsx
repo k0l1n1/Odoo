@@ -8,7 +8,8 @@ import Toast from '../../components/common/Toast';
 import InvoiceModal from '../../components/invoices/InvoiceModal';
 import PaymentModal from '../../components/payments/PaymentModal';
 import { invoicesApi } from '../../services/api';
-import { Search, FileText, CreditCard, Eye, Printer, RefreshCw } from 'lucide-react';
+import { Search, FileText, CreditCard, Eye, Printer, RefreshCw, Download } from 'lucide-react';
+import { downloadInvoicePdf } from '../../utils/invoicePdf';
 
 export default function MyInvoices() {
   const [invoices, setInvoices] = useState([]);
@@ -111,7 +112,25 @@ export default function MyInvoices() {
             icon={Eye}
             onClick={() => setSelectedInvoice(row)}
           >
-            View PDF
+            View
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            icon={Download}
+            title="Download PDF"
+            onClick={async () => {
+              try {
+                await downloadInvoicePdf(row.id, row.invoice_number);
+                setToast({ type: 'success', message: `Downloaded Invoice #${row.invoice_number}.pdf` });
+              } catch (e) {
+                setToast({ type: 'error', message: 'Failed to download invoice PDF' });
+              }
+            }}
+          >
+            PDF
           </Button>
 
           {(row.payment_status === 'pending' || row.payment_status === 'overdue') && (

@@ -1,4 +1,5 @@
 const Invoice = require('../models/Invoice');
+const pdfService = require('../services/pdfService');
 
 const invoiceController = {
   async getAllInvoices(req, res) {
@@ -82,6 +83,27 @@ const invoiceController = {
     } catch (err) {
       console.error('[Update Invoice Status Error]', err);
       res.status(500).json({ success: false, message: 'Failed to update invoice status.' });
+    }
+  },
+
+  async downloadInvoicePdf(req, res) {
+    try {
+      const { id } = req.params;
+      const invoice = await Invoice.getById(id);
+      if (!invoice) {
+        return res.status(404).json({ success: false, message: 'Invoice not found.' });
+      }
+
+      // Check ownership if customer
+      if (req.user.role !== 'admin' && req.user.role !== 'staff' && invoice.user_id !== req.user.id) {
+        return res.status(403).json({ success: false, message: 'Unauthorized to download this invoice.' });
+      }
+
+      const isDownload = req.query.inline !== 'true';
+      pdfService.generateInvoicePdf(invoice, res, isDownload);
+    } catch (err) {
+      console.error('[Download Invoice PDF Error]', err);
+      res.status(500).json({ success: false, message: 'Failed to generate invoice PDF.' });
     }
   }
 };
