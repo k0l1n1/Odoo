@@ -77,7 +77,7 @@ export default function PaymentManagement() {
       header: 'Amount Paid',
       render: (row) => (
         <span className="font-extrabold text-slate-900 text-xs">
-          ${parseFloat(row.amount).toFixed(2)}
+          ₹{parseFloat(row.amount).toFixed(2)}
         </span>
       )
     },

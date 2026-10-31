@@ -57,7 +57,7 @@ export default function PaymentModal({ isOpen, onClose, invoice, onSuccess }) {
       isOpen={isOpen}
       onClose={onClose}
       title="Simulated Payment Gateway"
-      subtitle={`Invoice #${invoice.invoice_number} • Total Due: $${parseFloat(invoice.total_amount).toFixed(2)}`}
+      subtitle={`Invoice #${invoice.invoice_number} • Total Due: ₹${parseFloat(invoice.total_amount).toFixed(2)}`}
       maxWidth="max-w-lg"
     >
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -69,7 +69,7 @@ export default function PaymentModal({ isOpen, onClose, invoice, onSuccess }) {
           </div>
           <div className="text-right">
             <span className="text-xs text-slate-500 font-medium">Amount Due</span>
-            <p className="text-lg font-extrabold text-brand-600">${parseFloat(invoice.total_amount).toFixed(2)}</p>
+            <p className="text-lg font-extrabold text-brand-600">₹${parseFloat(invoice.total_amount).toFixed(2)}</p>
           </div>
         </div>
 
@@ -229,7 +229,7 @@ export default function PaymentModal({ isOpen, onClose, invoice, onSuccess }) {
             loading={loading}
             icon={ShieldCheck}
           >
-            Pay ${parseFloat(invoice.total_amount).toFixed(2)}
+            Pay ₹{parseFloat(invoice.total_amount).toFixed(2)}
           </Button>
         </div>
       </form>

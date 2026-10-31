@@ -8,7 +8,7 @@ import { dashboardApi, renewalsApi } from '../../services/api';
 import {
   Users,
   Layers,
-  DollarSign,
+  IndianRupee,
   TrendingUp,
   RefreshCw,
   AlertCircle,
@@ -138,14 +138,14 @@ export default function AdminDashboard({ onNavigate }) {
           <div>
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Revenue</span>
             <p className="text-2xl font-black text-slate-900 mt-1">
-              ${parseFloat(metrics.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              ₹{parseFloat(metrics.totalRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </p>
             <p className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-1">
               <TrendingUp className="h-3 w-3" /> Realized from payments
             </p>
           </div>
           <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
-            <DollarSign className="h-6 w-6" />
+            <IndianRupee className="h-6 w-6" />
           </div>
         </div>
 
@@ -154,7 +154,7 @@ export default function AdminDashboard({ onNavigate }) {
           <div>
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">MRR</span>
             <p className="text-2xl font-black text-brand-600 mt-1">
-              ${parseFloat(metrics.mrr || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              ₹{parseFloat(metrics.mrr || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </p>
             <p className="text-[11px] text-slate-500 mt-1">
               Normalized monthly run-rate
@@ -228,7 +228,7 @@ export default function AdminDashboard({ onNavigate }) {
             <div>
               <span className="text-xs font-semibold text-rose-900">Unpaid Invoices</span>
               <p className="text-xl font-bold text-rose-900">
-                {metrics.unpaidInvoicesCount || 0} (${parseFloat(metrics.unpaidInvoicesAmount || 0).toFixed(2)})
+                {metrics.unpaidInvoicesCount || 0} (₹{parseFloat(metrics.unpaidInvoicesAmount || 0).toFixed(2)})
               </p>
             </div>
           </div>
@@ -268,7 +268,7 @@ export default function AdminDashboard({ onNavigate }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Monthly Revenue Chart */}
         <Card
-          title="Monthly Revenue Trend ($)"
+          title="Monthly Revenue Trend (₹)"
           subtitle="Past 6-month automated billing & payment collections"
           className="lg:col-span-2"
         >
@@ -283,9 +283,9 @@ export default function AdminDashboard({ onNavigate }) {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} tickLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} tickFormatter={(v) => `$${v}`} />
+                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} tickFormatter={(v) => `₹${v}`} />
                 <Tooltip
-                  formatter={(val) => [`$${val}`, 'Revenue']}
+                  formatter={(val) => [`₹${val}`, 'Revenue']}
                   contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
                 />
                 <Area type="monotone" dataKey="revenue" stroke="#0b66fe" strokeWidth={2.5} fillOpacity={1} fill="url(#revenueGrad)" />
@@ -400,7 +400,7 @@ export default function AdminDashboard({ onNavigate }) {
                       </td>
                       <td className="py-2.5 px-3">
                         <span className="font-medium text-slate-800">{item.plan_name}</span>
-                        <span className="text-[10px] text-slate-400 block">${item.plan_price}/{item.billing_cycle}</span>
+                        <span className="text-[10px] text-slate-400 block">₹{item.plan_price}/{item.billing_cycle}</span>
                       </td>
                       <td className="py-2.5 px-3 font-mono font-medium text-slate-700">
                         {item.next_billing_date}
@@ -467,7 +467,7 @@ export default function AdminDashboard({ onNavigate }) {
                         <p className="text-[10px] text-slate-400">{tx.invoice_number}</p>
                       </td>
                       <td className="py-2.5 px-3 font-semibold text-slate-900">
-                        ${parseFloat(tx.amount).toFixed(2)}
+                        ₹{parseFloat(tx.amount).toFixed(2)}
                       </td>
                       <td className="py-2.5 px-3">
                         <Badge status={tx.payment_status} size="sm" />

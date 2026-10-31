@@ -86,10 +86,10 @@ export default function MyInvoices() {
       render: (row) => (
         <div>
           <span className="font-extrabold text-slate-900 text-xs">
-            ${parseFloat(row.total_amount).toFixed(2)}
+            ₹{parseFloat(row.total_amount).toFixed(2)}
           </span>
           <span className="text-[10px] text-slate-400 block">
-            (Net: ${parseFloat(row.amount).toFixed(2)} + Tax: ${parseFloat(row.tax_amount || 0).toFixed(2)})
+            (Net: ₹{parseFloat(row.amount).toFixed(2)} + Tax: ₹{parseFloat(row.tax_amount || 0).toFixed(2)})
           </span>
         </div>
       )

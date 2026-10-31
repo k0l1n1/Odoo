@@ -100,7 +100,7 @@ export default function MySubscriptions({ onNavigate }) {
 
                   <div className="my-3">
                     <span className="text-2xl font-black text-slate-900">
-                      ${parseFloat(sub.plan_price || 0).toFixed(2)}
+                      ₹{parseFloat(sub.plan_price || 0).toFixed(2)}
                     </span>
                     <span className="text-xs text-slate-500 font-medium">/{sub.billing_cycle}</span>
                   </div>
@@ -177,7 +177,7 @@ export default function MySubscriptions({ onNavigate }) {
                 </div>
 
                 <span className="font-bold text-slate-700 text-sm">
-                  ${parseFloat(sub.plan_price || 0).toFixed(2)}/{sub.billing_cycle}
+                  ₹{parseFloat(sub.plan_price || 0).toFixed(2)}/{sub.billing_cycle}
                 </span>
               </div>
             ))}

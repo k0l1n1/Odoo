@@ -85,7 +85,7 @@ export default function InvoiceModal({ isOpen, onClose, invoice, onPayNow }) {
                   Recurring
                 </td>
                 <td className="py-4 px-4 text-right font-medium text-slate-900">
-                  ${parseFloat(invoice.amount).toFixed(2)}
+                  ₹{parseFloat(invoice.amount).toFixed(2)}
                 </td>
               </tr>
             </tbody>
@@ -97,15 +97,15 @@ export default function InvoiceModal({ isOpen, onClose, invoice, onPayNow }) {
           <div className="w-full sm:w-64 space-y-2">
             <div className="flex justify-between text-xs text-slate-600">
               <span>Subtotal:</span>
-              <span className="font-medium text-slate-900">${parseFloat(invoice.amount).toFixed(2)}</span>
+              <span className="font-medium text-slate-900">₹{parseFloat(invoice.amount).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-xs text-slate-600">
-              <span>Tax (10% GST/VAT):</span>
-              <span className="font-medium text-slate-900">${parseFloat(invoice.tax_amount || 0).toFixed(2)}</span>
+              <span>Tax (10% GST):</span>
+              <span className="font-medium text-slate-900">₹{parseFloat(invoice.tax_amount || 0).toFixed(2)}</span>
             </div>
             <div className="border-t border-slate-200 pt-2 flex justify-between text-sm font-bold text-slate-900">
               <span>Total Due:</span>
-              <span className="text-brand-600 text-base">${parseFloat(invoice.total_amount).toFixed(2)}</span>
+              <span className="text-brand-600 text-base">₹{parseFloat(invoice.total_amount).toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -142,7 +142,7 @@ export default function InvoiceModal({ isOpen, onClose, invoice, onPayNow }) {
                 onPayNow(invoice);
               }}
             >
-              Pay Now (${parseFloat(invoice.total_amount).toFixed(2)})
+              Pay Now (₹{parseFloat(invoice.total_amount).toFixed(2)})
             </Button>
           )}
           <Button type="button" variant="outline" size="sm" onClick={onClose}>

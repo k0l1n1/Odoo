@@ -86,11 +86,11 @@ export default function CustomerManagement() {
       )
     },
     {
-      header: 'Total Paid ($)',
+      header: 'Total Paid (₹)',
       render: (row) => (
         <div>
           <span className="font-extrabold text-slate-900 text-xs block">
-            ${parseFloat(row.total_paid || 0).toFixed(2)}
+            ₹{parseFloat(row.total_paid || 0).toFixed(2)}
           </span>
           <span className="text-[10px] text-slate-400">{row.total_invoices || 0} invoices</span>
         </div>

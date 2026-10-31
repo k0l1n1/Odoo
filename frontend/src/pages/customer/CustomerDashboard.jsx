@@ -110,7 +110,7 @@ export default function CustomerDashboard({ onNavigate }) {
                 <Badge status="pending" size="sm" />
               </div>
               <p className="text-xs text-slate-600 mt-0.5">
-                Invoice #{pendingInvoices[0].invoice_number} ({pendingInvoices[0].plan_name}) for ${parseFloat(pendingInvoices[0].total_amount).toFixed(2)} is due on {pendingInvoices[0].due_date}.
+                Invoice #{pendingInvoices[0].invoice_number} ({pendingInvoices[0].plan_name}) for ₹{parseFloat(pendingInvoices[0].total_amount).toFixed(2)} is due on {pendingInvoices[0].due_date}.
               </p>
             </div>
           </div>
@@ -122,7 +122,7 @@ export default function CustomerDashboard({ onNavigate }) {
             icon={CreditCard}
             onClick={() => setPayModalInvoice(pendingInvoices[0])}
           >
-            Pay Now (${parseFloat(pendingInvoices[0].total_amount).toFixed(2)})
+            Pay Now (₹{parseFloat(pendingInvoices[0].total_amount).toFixed(2)})
           </Button>
         </div>
       )}
@@ -155,7 +155,7 @@ export default function CustomerDashboard({ onNavigate }) {
 
                   <div className="sm:text-right">
                     <span className="text-3xl font-black text-slate-900">
-                      ${parseFloat(activeSubscription.plan_price || 0).toFixed(2)}
+                      ₹{parseFloat(activeSubscription.plan_price || 0).toFixed(2)}
                     </span>
                     <span className="text-xs text-slate-500 font-medium">/{activeSubscription.billing_cycle}</span>
                   </div>
@@ -252,7 +252,7 @@ export default function CustomerDashboard({ onNavigate }) {
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <span className="text-xs text-slate-500">Lifetime Payments</span>
                 <span className="text-base font-extrabold text-slate-900">
-                  ${parseFloat(totalPaid).toFixed(2)}
+                  ₹{parseFloat(totalPaid).toFixed(2)}
                 </span>
               </div>
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -345,7 +345,7 @@ export default function CustomerDashboard({ onNavigate }) {
                       {p.payment_date?.slice(0, 10)}
                     </td>
                     <td className="py-2.5 px-3 font-bold text-slate-900">
-                      ${parseFloat(p.amount).toFixed(2)}
+                      ₹{parseFloat(p.amount).toFixed(2)}
                     </td>
                     <td className="py-2.5 px-3">
                       <Badge status={p.payment_status} size="sm" />

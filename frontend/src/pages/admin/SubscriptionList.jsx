@@ -71,7 +71,7 @@ export default function SubscriptionList() {
         <div>
           <span className="font-semibold text-slate-900 text-xs">{row.plan_name}</span>
           <p className="text-[11px] text-brand-600 font-medium">
-            ${parseFloat(row.plan_price || 0).toFixed(2)} / <span className="capitalize">{row.billing_cycle}</span>
+            ₹{parseFloat(row.plan_price || 0).toFixed(2)} / <span className="capitalize">{row.billing_cycle}</span>
           </p>
         </div>
       )
