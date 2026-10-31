@@ -35,7 +35,7 @@ For quick evaluation, pre-seeded accounts are provided. The login page also feat
 
 ---
 
-## ⚡ Supabase Setup-PostgreSQL
+## ⚡ Supabase Setup:PostgreSQL
 
 The database schema and seed records are located in:
 - Schema: [`database/schema.sql`](database/schema.sql)
