@@ -49,6 +49,24 @@ const Subscription = {
     };
   },
 
+  async getActiveOrPendingByUserId(userId) {
+    const [rows] = await db.query(`
+      SELECT s.*, 
+             u.name as customer_name, u.email as customer_email,
+             p.name as plan_name, p.price as plan_price, p.billing_cycle, p.features
+      FROM subscriptions s
+      JOIN users u ON s.user_id = u.id
+      JOIN subscription_plans p ON s.plan_id = p.id
+      WHERE s.user_id = ? AND s.status IN ('active', 'pending')
+      ORDER BY s.id DESC
+    `, [userId]);
+    if (!rows[0]) return null;
+    return {
+      ...rows[0],
+      features: rows[0].features ? (typeof rows[0].features === 'string' ? JSON.parse(rows[0].features) : rows[0].features) : []
+    };
+  },
+
   async getById(id) {
     const [rows] = await db.query(`
       SELECT s.*, 

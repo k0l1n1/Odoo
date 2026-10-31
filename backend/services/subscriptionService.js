@@ -6,10 +6,15 @@ const { generateSubCode, calculateBillingDates, formatDate } = require('../utils
 
 const subscriptionService = {
   async subscribe({ userId, planId, autoRenew = true }) {
-    // 1. Check if user already has an active subscription
-    const existingActive = await Subscription.getActiveByUserId(userId);
-    if (existingActive) {
-      throw new Error(`You already have an active subscription (${existingActive.plan_name}). Please cancel or change it before subscribing to a new plan.`);
+    // 1. Check if user already has an active or pending subscription
+    const existing = await Subscription.getActiveOrPendingByUserId(userId);
+    if (existing) {
+      const planName = existing.plan_name || 'Active';
+      if (existing.status === 'active') {
+        throw new Error(`You already have an active subscription (${planName}). Please cancel or change it before subscribing to a new plan.`);
+      } else {
+        throw new Error(`You already have a pending subscription (${planName}). Please complete payment or cancel it before subscribing to a new plan.`);
+      }
     }
 
     // 2. Fetch plan details
@@ -48,7 +53,25 @@ const subscriptionService = {
       daysDue: 7
     });
 
-    const subscription = await Subscription.getById(subscriptionId);
+    let subscription = await Subscription.getById(subscriptionId);
+    if (!subscription) {
+      subscription = {
+        id: subscriptionId,
+        subscription_code: subscriptionCode,
+        user_id: userId,
+        plan_id: planId,
+        plan_name: plan.name,
+        plan_price: plan.price,
+        billing_cycle: plan.billing_cycle,
+        status: 'pending',
+        start_date: startDate,
+        next_billing_date: nextBillingDate,
+        expiry_date: expiryDate,
+        auto_renew: autoRenew ? 1 : 0,
+        features: plan.features || []
+      };
+    }
+
     return { subscription, invoice };
   },
 

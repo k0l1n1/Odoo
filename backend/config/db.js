@@ -117,8 +117,12 @@ async function executeSupabaseDirect(sql, params) {
     } else if (lower.includes('user_id = ?')) {
       rows = rows.filter(r => r.user_id === Number(params[0]));
     }
-    if (lower.includes("status = 'active'") || (lower.includes('status = ?') && params.includes('active'))) {
+    if (lower.includes("status in ('active', 'pending')")) {
+      rows = rows.filter(r => r.status === 'active' || r.status === 'pending');
+    } else if (lower.includes("status = 'active'") || (lower.includes('status = ?') && params.includes('active'))) {
       rows = rows.filter(r => r.status === 'active');
+    } else if (lower.includes("status = 'pending'") || (lower.includes('status = ?') && params.includes('pending'))) {
+      rows = rows.filter(r => r.status === 'pending');
     }
 
     return [rows, []];
@@ -221,9 +225,23 @@ async function executeSupabaseDirect(sql, params) {
     return [rows, []];
   }
 
+  // Helper to safely get the next auto-increment ID from live Supabase table
+  async function getNextId(tableName) {
+    try {
+      const { data, error } = await supabase.from(tableName).select('id').order('id', { ascending: false }).limit(1);
+      if (!error && data && data.length > 0 && data[0].id) {
+        return Number(data[0].id) + 1;
+      }
+      return 1;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // 7. INSERT Operations
   if (lower.startsWith('insert into users')) {
-    const { data, error } = await supabase.from('users').insert({
+    const nextId = await getNextId('users');
+    const insertObj = {
       name: params[0],
       email: params[1],
       password: params[2],
@@ -232,26 +250,34 @@ async function executeSupabaseDirect(sql, params) {
       phone: params[5] || null,
       address: params[6] || null,
       status: params[7] || 'active'
-    }).select('id');
+    };
+    if (nextId) insertObj.id = nextId;
+
+    const { data, error } = await supabase.from('users').insert(insertObj).select('id');
     if (error) throw error;
     return [{ insertId: data[0].id, affectedRows: 1 }, []];
   }
 
   if (lower.startsWith('insert into subscription_plans')) {
-    const { data, error } = await supabase.from('subscription_plans').insert({
+    const nextId = await getNextId('subscription_plans');
+    const insertObj = {
       name: params[0],
       description: params[1],
       price: parseFloat(params[2]),
       billing_cycle: params[3],
       features: Array.isArray(params[4]) ? params[4] : (typeof params[4] === 'string' ? JSON.parse(params[4]) : params[4]),
       status: params[5] || 'active'
-    }).select('id');
+    };
+    if (nextId) insertObj.id = nextId;
+
+    const { data, error } = await supabase.from('subscription_plans').insert(insertObj).select('id');
     if (error) throw error;
     return [{ insertId: data[0].id, affectedRows: 1 }, []];
   }
 
   if (lower.startsWith('insert into subscriptions')) {
-    const { data, error } = await supabase.from('subscriptions').insert({
+    const nextId = await getNextId('subscriptions');
+    const insertObj = {
       subscription_code: params[0],
       user_id: Number(params[1]),
       plan_id: Number(params[2]),
@@ -260,13 +286,17 @@ async function executeSupabaseDirect(sql, params) {
       next_billing_date: params[5],
       expiry_date: params[6],
       auto_renew: !!params[7]
-    }).select('id');
+    };
+    if (nextId) insertObj.id = nextId;
+
+    const { data, error } = await supabase.from('subscriptions').insert(insertObj).select('id');
     if (error) throw error;
     return [{ insertId: data[0].id, affectedRows: 1 }, []];
   }
 
   if (lower.startsWith('insert into invoices')) {
-    const { data, error } = await supabase.from('invoices').insert({
+    const nextId = await getNextId('invoices');
+    const insertObj = {
       invoice_number: params[0],
       subscription_id: Number(params[1]),
       user_id: Number(params[2]),
@@ -278,13 +308,17 @@ async function executeSupabaseDirect(sql, params) {
       due_date: params[8],
       payment_status: params[9] || 'pending',
       invoice_type: params[10] || 'subscription_new'
-    }).select('id');
+    };
+    if (nextId) insertObj.id = nextId;
+
+    const { data, error } = await supabase.from('invoices').insert(insertObj).select('id');
     if (error) throw error;
     return [{ insertId: data[0].id, affectedRows: 1 }, []];
   }
 
   if (lower.startsWith('insert into payments')) {
-    const { data, error } = await supabase.from('payments').insert({
+    const nextId = await getNextId('payments');
+    const insertObj = {
       payment_code: params[0],
       user_id: Number(params[1]),
       invoice_id: Number(params[2]),
@@ -294,13 +328,17 @@ async function executeSupabaseDirect(sql, params) {
       transaction_reference: params[6],
       payment_status: params[7],
       gateway_response: typeof params[8] === 'string' ? JSON.parse(params[8]) : (params[8] || {})
-    }).select('id');
+    };
+    if (nextId) insertObj.id = nextId;
+
+    const { data, error } = await supabase.from('payments').insert(insertObj).select('id');
     if (error) throw error;
     return [{ insertId: data[0].id, affectedRows: 1 }, []];
   }
 
   if (lower.startsWith('insert into renewal_history')) {
-    const { data, error } = await supabase.from('renewal_history').insert({
+    const nextId = await getNextId('renewal_history');
+    const insertObj = {
       subscription_id: Number(params[0]),
       invoice_id: params[1] ? Number(params[1]) : null,
       previous_billing_date: params[2],
@@ -308,7 +346,10 @@ async function executeSupabaseDirect(sql, params) {
       renewal_date: params[4] || new Date().toISOString(),
       renewal_status: params[5] || 'processed',
       notes: params[6] || null
-    }).select('id');
+    };
+    if (nextId) insertObj.id = nextId;
+
+    const { data, error } = await supabase.from('renewal_history').insert(insertObj).select('id');
     if (error) throw error;
     return [{ insertId: data[0].id, affectedRows: 1 }, []];
   }
@@ -444,17 +485,129 @@ function executeFallbackQuery(sql, params = []) {
       return [store.subscription_plans, []];
     }
     if (lower.includes('from subscriptions')) {
-      return [store.subscriptions, []];
+      const userMap = new Map(store.users.map(u => [u.id, u]));
+      const planMap = new Map(store.subscription_plans.map(p => [p.id, p]));
+      let rows = store.subscriptions.map(s => {
+        const u = userMap.get(s.user_id) || {};
+        const p = planMap.get(s.plan_id) || {};
+        return {
+          ...s,
+          customer_name: u.name || 'Unknown',
+          customer_email: u.email || '',
+          company_name: u.company_name || '',
+          plan_name: p.name || 'Custom',
+          plan_price: p.price || 0,
+          billing_cycle: p.billing_cycle || 'monthly',
+          features: p.features || []
+        };
+      });
+      if (lower.includes('s.id = ?') || lower.includes('subscriptions.id = ?')) {
+        rows = rows.filter(r => r.id === Number(params[0]));
+      } else if (lower.includes('user_id = ?')) {
+        rows = rows.filter(r => r.user_id === Number(params[0]));
+      }
+      if (lower.includes("status = 'active'") || (lower.includes('status = ?') && params.includes('active'))) {
+        rows = rows.filter(r => r.status === 'active');
+      }
+      return [rows, []];
     }
     if (lower.includes('from invoices')) {
-      return [store.invoices, []];
+      const userMap = new Map(store.users.map(u => [u.id, u]));
+      const subMap = new Map(store.subscriptions.map(s => [s.id, s]));
+      let rows = store.invoices.map(i => {
+        const u = userMap.get(i.user_id) || {};
+        const s = subMap.get(i.subscription_id) || {};
+        return {
+          ...i,
+          customer_name: u.name || 'Unknown',
+          customer_email: u.email || '',
+          company_name: u.company_name || '',
+          subscription_code: s.subscription_code || ''
+        };
+      });
+      if (lower.includes('inv.id = ?') || lower.includes('invoices.id = ?')) {
+        rows = rows.filter(r => r.id === Number(params[0]));
+      } else if (lower.includes('user_id = ?')) {
+        rows = rows.filter(r => r.user_id === Number(params[0]));
+      }
+      return [rows, []];
     }
     if (lower.includes('from payments')) {
       return [store.payments, []];
     }
+    if (lower.includes('from renewal_history')) {
+      return [store.renewal_history, []];
+    }
   }
 
-  return [[], []];
+  // Fallback INSERTs
+  if (lower.startsWith('insert into users')) {
+    const id = store.autoInc.users++;
+    const item = { id, name: params[0], email: params[1], password: params[2], role: params[3] || 'customer', company_name: params[4], phone: params[5], address: params[6], status: params[7] || 'active' };
+    store.users.push(item);
+    return [{ insertId: id, affectedRows: 1 }, []];
+  }
+  if (lower.startsWith('insert into subscription_plans')) {
+    const id = store.autoInc.subscription_plans++;
+    const item = { id, name: params[0], description: params[1], price: parseFloat(params[2]), billing_cycle: params[3], features: params[4], status: params[5] || 'active' };
+    store.subscription_plans.push(item);
+    return [{ insertId: id, affectedRows: 1 }, []];
+  }
+  if (lower.startsWith('insert into subscriptions')) {
+    const id = store.autoInc.subscriptions++;
+    const item = { id, subscription_code: params[0], user_id: Number(params[1]), plan_id: Number(params[2]), status: params[3] || 'pending', start_date: params[4], next_billing_date: params[5], expiry_date: params[6], auto_renew: !!params[7] };
+    store.subscriptions.push(item);
+    return [{ insertId: id, affectedRows: 1 }, []];
+  }
+  if (lower.startsWith('insert into invoices')) {
+    const id = store.autoInc.invoices++;
+    const item = { id, invoice_number: params[0], subscription_id: Number(params[1]), user_id: Number(params[2]), plan_name: params[3], amount: parseFloat(params[4]), tax_amount: parseFloat(params[5] || 0), total_amount: parseFloat(params[6]), invoice_date: params[7], due_date: params[8], payment_status: params[9] || 'pending', invoice_type: params[10] || 'subscription_new' };
+    store.invoices.push(item);
+    return [{ insertId: id, affectedRows: 1 }, []];
+  }
+  if (lower.startsWith('insert into payments')) {
+    const id = store.autoInc.payments++;
+    const item = { id, payment_code: params[0], user_id: Number(params[1]), invoice_id: Number(params[2]), amount: parseFloat(params[3]), payment_date: params[4], payment_method: params[5], transaction_reference: params[6], payment_status: params[7], gateway_response: params[8] };
+    store.payments.push(item);
+    return [{ insertId: id, affectedRows: 1 }, []];
+  }
+  if (lower.startsWith('insert into renewal_history')) {
+    const id = store.autoInc.renewal_history++;
+    const item = { id, subscription_id: Number(params[0]), invoice_id: params[1] ? Number(params[1]) : null, previous_billing_date: params[2], new_billing_date: params[3], renewal_date: params[4], renewal_status: params[5] || 'processed', notes: params[6] || null };
+    store.renewal_history.push(item);
+    return [{ insertId: id, affectedRows: 1 }, []];
+  }
+
+  // Fallback UPDATEs
+  if (lower.startsWith('update subscriptions')) {
+    const id = Number(params[params.length - 1]);
+    const sub = store.subscriptions.find(s => s.id === id);
+    if (sub) {
+      if (lower.includes('status = ?') && lower.includes('cancelled_at')) {
+        sub.status = params[0];
+        sub.cancelled_at = params[1];
+        sub.cancellation_reason = params[2];
+      } else if (lower.includes('next_billing_date = ?')) {
+        sub.status = params[0];
+        sub.next_billing_date = params[1];
+        sub.expiry_date = params[2];
+      } else if (lower.includes('status = ?')) {
+        sub.status = params[0];
+      }
+    }
+    return [{ affectedRows: sub ? 1 : 0 }, []];
+  }
+  if (lower.startsWith('update invoices')) {
+    const id = Number(params[params.length - 1]);
+    const inv = store.invoices.find(i => i.id === id);
+    if (inv) {
+      inv.payment_status = params[0];
+      if (lower.includes('paid_at')) inv.paid_at = params[1];
+    }
+    return [{ affectedRows: inv ? 1 : 0 }, []];
+  }
+
+  return [{ affectedRows: 1, insertId: 1 }, []];
 }
 
 module.exports = {

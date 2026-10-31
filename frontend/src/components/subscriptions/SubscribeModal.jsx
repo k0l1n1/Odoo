@@ -24,6 +24,8 @@ export default function SubscribeModal({ isOpen, onClose, plan, onSuccess }) {
       if (res.success) {
         if (onSuccess) onSuccess(res.subscription, res.invoice);
         onClose();
+      } else {
+        setError(res.message || 'Subscription failed.');
       }
     } catch (err) {
       setError(err.message || 'Subscription failed.');

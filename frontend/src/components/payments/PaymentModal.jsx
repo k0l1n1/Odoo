@@ -65,7 +65,7 @@ export default function PaymentModal({ isOpen, onClose, invoice, onSuccess }) {
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between">
           <div>
             <span className="text-xs text-slate-500 font-medium">Selected Plan</span>
-            <p className="text-sm font-bold text-slate-900">{invoice.plan_name}</p>
+            <p className="text-sm font-bold text-slate-900">{invoice?.plan_name || 'Plan Subscription'}</p>
           </div>
           <div className="text-right">
             <span className="text-xs text-slate-500 font-medium">Amount Due</span>

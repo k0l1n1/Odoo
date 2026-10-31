@@ -39,9 +39,10 @@ export default function BrowsePlans({ onNavigate }) {
   });
 
   const handleSubscribeSuccess = (sub, invoice) => {
+    const planName = sub?.plan_name || selectedPlan?.name || 'Selected Plan';
     setToast({
       type: 'success',
-      message: `Subscribed to ${sub.plan_name}! Please complete payment to activate.`
+      message: `Subscribed to ${planName}! Please complete payment to activate.`
     });
     // Open payment modal immediately
     if (invoice) {
