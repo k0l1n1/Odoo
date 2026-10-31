@@ -123,8 +123,8 @@ export default function Sidebar({ currentPath, onNavigate, mobileOpen, setMobile
           })}
         </nav>
 
-        {/* AI Help Copilot Quick Action Card */}
-        {onOpenAiHelp && (
+        {/* AI Help Copilot Quick Action Card - Customers Only */}
+        {!isStaffOrAdmin && onOpenAiHelp && (
           <div className="px-3 pb-3">
             <button
               type="button"
