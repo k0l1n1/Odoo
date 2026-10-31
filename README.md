@@ -58,7 +58,7 @@ If you are evaluating locally without Supabase credentials yet, the application 
 
 ---
 
-## 🌟 Key Features
+## 🌟 Key Features of Application
 
 1. **Role-Based Auth**: Admin and Customer portals, JWT sessions, bcrypt hashing, profile updates.
 2. **Subscription Plans**: Starter ($29/mo), Professional ($79/mo), Enterprise ($199/mo), Growth Annual ($790/yr). Admin CRUD & Customer comparison.
