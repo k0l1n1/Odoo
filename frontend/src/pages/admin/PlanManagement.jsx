@@ -159,7 +159,7 @@ export default function PlanManagement() {
       </div>
 
       {/* Plan Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {plans.map((plan) => {
           const features = Array.isArray(plan.features) ? plan.features : [];
           return (
@@ -171,32 +171,32 @@ export default function PlanManagement() {
                   : 'border-slate-200 opacity-60 bg-slate-50/50'
               }`}
             >
-              <div className="p-6">
+              <div className="p-5">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900">{plan.name}</h3>
+                    <h3 className="text-base font-bold text-slate-900">{plan.name}</h3>
                     <p className="text-xs text-slate-500 capitalize">{plan.billing_cycle} billing</p>
                   </div>
                   <Badge status={plan.status} size="sm" />
                 </div>
 
-                <div className="my-4">
-                  <span className="text-3xl font-black text-slate-900">
+                <div className="my-3">
+                  <span className="text-2xl font-black text-slate-900">
                     ${parseFloat(plan.price).toFixed(2)}
                   </span>
                   <span className="text-xs text-slate-500 font-medium">/{plan.billing_cycle}</span>
                 </div>
 
-                <p className="text-xs text-slate-600 mb-4 line-clamp-2">
+                <p className="text-xs text-slate-600 mb-4 line-clamp-2 min-h-[32px]">
                   {plan.description || 'No description provided.'}
                 </p>
 
-                <div className="space-y-2 pt-4 border-t border-slate-100">
+                <div className="space-y-2 pt-3 border-t border-slate-100">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     Included Features
                   </span>
                   {features.map((feat, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-xs text-slate-700">
+                    <div key={idx} className="flex items-start gap-1.5 text-xs text-slate-700">
                       <Check className="h-3.5 w-3.5 text-brand-600 mt-0.5 flex-shrink-0" />
                       <span>{feat}</span>
                     </div>
@@ -205,7 +205,7 @@ export default function PlanManagement() {
               </div>
 
               {/* Card Footer Actions */}
-              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl flex items-center justify-between">
+              <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl flex items-center justify-between gap-1">
                 <button
                   type="button"
                   onClick={() => handleToggleStatus(plan)}

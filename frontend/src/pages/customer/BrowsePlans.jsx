@@ -63,7 +63,7 @@ export default function BrowsePlans({ onNavigate }) {
   if (loading) return <Loading message="Loading subscription tiers..." />;
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-8 max-w-7xl mx-auto">
       {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
 
       {/* Header section */}
@@ -103,7 +103,7 @@ export default function BrowsePlans({ onNavigate }) {
       </div>
 
       {/* Pricing Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
         {filteredPlans.map((plan) => {
           const isPopular = plan.name.toLowerCase().includes('professional');
           const features = Array.isArray(plan.features) ? plan.features : [];
