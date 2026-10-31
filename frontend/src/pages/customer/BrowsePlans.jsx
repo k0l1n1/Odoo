@@ -61,6 +61,44 @@ export default function BrowsePlans({ onNavigate }) {
   };
 
   const scrollContainerRef = useRef(null);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const dragStartRef = useRef({ x: 0, scrollLeft: 0 });
+
+  // Enable mouse wheel horizontal scrolling
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const onWheel = (e) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY * 1.2;
+      }
+    };
+
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [filteredPlans]);
+
+  const handleMouseDown = (e) => {
+    if (e.button !== 0 || e.target.closest('button') || e.target.closest('input')) return;
+    setIsMouseDown(true);
+    dragStartRef.current = {
+      x: e.pageX,
+      scrollLeft: scrollContainerRef.current ? scrollContainerRef.current.scrollLeft : 0
+    };
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isMouseDown || !scrollContainerRef.current) return;
+    e.preventDefault();
+    const walk = (e.pageX - dragStartRef.current.x) * 1.5;
+    scrollContainerRef.current.scrollLeft = dragStartRef.current.scrollLeft - walk;
+  };
+
+  const handleMouseUp = () => {
+    setIsMouseDown(false);
+  };
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
@@ -138,10 +176,36 @@ export default function BrowsePlans({ onNavigate }) {
       </div>
 
       {/* Pricing Cards Horizontal Scroll Row */}
-      <div
-        ref={scrollContainerRef}
-        className="flex flex-nowrap items-stretch gap-6 overflow-x-auto pb-6 pt-4 px-1 horizontal-plans-scroll scroll-smooth"
-      >
+      <div className="relative w-full max-w-full min-w-0">
+        {/* Floating Side Scroll Buttons */}
+        <button
+          type="button"
+          onClick={scrollLeft}
+          title="Scroll Left"
+          className="hidden md:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-white shadow-xl border border-slate-200 text-slate-700 hover:text-brand-600 hover:bg-brand-50 hover:border-brand-300 items-center justify-center transition-all opacity-90 hover:opacity-100 hover:scale-105"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+
+        <button
+          type="button"
+          onClick={scrollRight}
+          title="Scroll Right"
+          className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-white shadow-xl border border-slate-200 text-slate-700 hover:text-brand-600 hover:bg-brand-50 hover:border-brand-300 items-center justify-center transition-all opacity-90 hover:opacity-100 hover:scale-105"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+
+        <div
+          ref={scrollContainerRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          className={`w-full max-w-full overflow-x-auto overflow-y-hidden flex flex-nowrap items-stretch gap-6 pb-6 pt-4 px-1 horizontal-plans-scroll scroll-smooth select-none ${
+            isMouseDown ? 'cursor-grabbing' : 'cursor-grab'
+          }`}
+        >
         {filteredPlans.map((plan) => {
           const isPopular = plan.name.toLowerCase().includes('professional');
           const features = Array.isArray(plan.features) ? plan.features : [];
@@ -215,6 +279,7 @@ export default function BrowsePlans({ onNavigate }) {
             </div>
           );
         })}
+        </div>
       </div>
 
       {/* Subscribe Modal */}

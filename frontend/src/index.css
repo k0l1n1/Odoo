@@ -26,15 +26,19 @@
 
 /* Dedicated horizontal plans scrollbar */
 .horizontal-plans-scroll {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: #94a3b8 #e2e8f0;
+  scrollbar-color: #94a3b8 #f1f5f9;
 }
 .horizontal-plans-scroll::-webkit-scrollbar {
-  height: 8px;
+  height: 10px;
 }
 .horizontal-plans-scroll::-webkit-scrollbar-track {
   background: #f1f5f9;
   border-radius: 9999px;
+  border: 1px solid #e2e8f0;
 }
 .horizontal-plans-scroll::-webkit-scrollbar-thumb {
   background: #94a3b8;
