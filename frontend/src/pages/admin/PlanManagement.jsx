@@ -8,7 +8,7 @@ import Toast from '../../components/common/Toast';
 import Loading from '../../components/common/Loading';
 import { plansApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { Plus, Edit2, Trash2, Check, Sparkles, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, Sparkles, AlertCircle, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 
 export default function PlanManagement() {
   const { isAdmin } = useAuth();
@@ -85,7 +85,9 @@ export default function PlanManagement() {
       .map(f => f.trim())
       .filter(Boolean);
 
-    const discountPercentage = Math.min(100, Math.max(0, parseFloat(formData.discount_percentage) || 0));
+    const discountPercentage = isAdmin
+      ? Math.min(100, Math.max(0, parseFloat(formData.discount_percentage) || 0))
+      : (editingPlan ? (editingPlan.discount_percentage || 0) : 0);
 
     try {
       if (editingPlan) {
@@ -416,18 +418,21 @@ export default function PlanManagement() {
             />
 
             <Input
-              label="Discount (%)"
+              label={isAdmin ? 'Discount (%)' : 'Discount (%) — Admin Only'}
               type="number"
               step="1"
               min="0"
               max="100"
+              disabled={!isAdmin}
               placeholder="0"
               value={formData.discount_percentage}
               onChange={(e) => setFormData({ ...formData, discount_percentage: e.target.value })}
               helperText={
-                formData.price && parseFloat(formData.discount_percentage) > 0
-                  ? `Effective: ₹${(parseFloat(formData.price) * (1 - parseFloat(formData.discount_percentage) / 100)).toFixed(2)}`
-                  : '0% = No discount'
+                !isAdmin
+                  ? '🔒 Only administrators can assign or modify plan discounts.'
+                  : (formData.price && parseFloat(formData.discount_percentage) > 0
+                      ? `Effective: ₹${(parseFloat(formData.price) * (1 - parseFloat(formData.discount_percentage) / 100)).toFixed(2)}`
+                      : '0% = No discount')
               }
             />
 

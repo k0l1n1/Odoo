@@ -42,6 +42,17 @@ const planController = {
         return res.status(400).json({ success: false, message: 'Plan name and price are required.' });
       }
 
+      const isAdmin = req.user && req.user.role === 'admin';
+      const requestedDiscount = discount_percentage !== undefined ? parseFloat(discount_percentage) : 0;
+
+      // Only administrators can assign discounts
+      if (!isAdmin && requestedDiscount > 0) {
+        return res.status(403).json({
+          success: false,
+          message: 'Permission denied: Only administrators can assign discounts to subscription plans.'
+        });
+      }
+
       const validCycles = ['monthly', 'quarterly', 'yearly'];
       const cycle = validCycles.includes(billing_cycle) ? billing_cycle : 'monthly';
 
@@ -51,7 +62,7 @@ const planController = {
         name: name.trim(),
         description: description ? description.trim() : '',
         price: parseFloat(price),
-        discount_percentage: discount_percentage !== undefined ? parseFloat(discount_percentage) : 0,
+        discount_percentage: isAdmin ? Math.min(100, Math.max(0, requestedDiscount)) : 0,
         billing_cycle: cycle,
         features: parsedFeatures,
         status: status || 'active'
@@ -75,6 +86,24 @@ const planController = {
         return res.status(404).json({ success: false, message: 'Plan not found.' });
       }
 
+      const isAdmin = req.user && req.user.role === 'admin';
+      const existingDiscount = parseFloat(existingPlan.discount_percentage || 0);
+
+      // Only administrators can assign or change discounts
+      if (!isAdmin && discount_percentage !== undefined) {
+        const requestedDiscount = parseFloat(discount_percentage);
+        if (requestedDiscount !== existingDiscount) {
+          return res.status(403).json({
+            success: false,
+            message: 'Permission denied: Only administrators can assign or modify plan discounts.'
+          });
+        }
+      }
+
+      const finalDiscount = isAdmin
+        ? (discount_percentage !== undefined ? Math.min(100, Math.max(0, parseFloat(discount_percentage))) : existingDiscount)
+        : existingDiscount;
+
       const validCycles = ['monthly', 'quarterly', 'yearly'];
       const cycle = validCycles.includes(billing_cycle) ? billing_cycle : existingPlan.billing_cycle;
 
@@ -89,7 +118,7 @@ const planController = {
         name: name !== undefined ? name.trim() : existingPlan.name,
         description: description !== undefined ? description.trim() : existingPlan.description,
         price: price !== undefined ? parseFloat(price) : existingPlan.price,
-        discount_percentage: discount_percentage !== undefined ? parseFloat(discount_percentage) : (existingPlan.discount_percentage || 0),
+        discount_percentage: finalDiscount,
         billing_cycle: cycle,
         features: parsedFeatures,
         status: status || existingPlan.status
