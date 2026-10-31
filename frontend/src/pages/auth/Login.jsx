@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import { Layers, Lock, Mail, Shield, User, ArrowRight, CheckCircle2, Zap } from 'lucide-react';
+import { Layers, Lock, Mail, Shield, User, ArrowRight, CheckCircle2, Zap, Sparkles } from 'lucide-react';
 
 export default function Login({ onNavigate }) {
   const { login } = useAuth();
@@ -29,10 +29,23 @@ export default function Login({ onNavigate }) {
     }
   };
 
-  const handleDemoFill = (demoEmail, demoPass) => {
+  const handleInstantDemoLogin = async (demoEmail, demoPass) => {
     setEmail(demoEmail);
     setPassword(demoPass);
     setError(null);
+    setLoading(true);
+    try {
+      const res = await login(demoEmail, demoPass);
+      if (res.user?.role === 'admin' || res.user?.role === 'staff') {
+        onNavigate('/admin');
+      } else {
+        onNavigate('/customer');
+      }
+    } catch (err) {
+      setError(err.message || 'Login failed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -55,40 +68,59 @@ export default function Login({ onNavigate }) {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4">
         <div className="bg-white/95 backdrop-blur-xl py-8 px-6 sm:px-8 shadow-2xl rounded-2xl border border-white/20">
-          {/* Quick Demo Login Preset Buttons */}
-          <div className="mb-6 p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl">
-            <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-              Hackathon Instant Demo Logins
-            </span>
-            <div className="grid grid-cols-3 gap-1.5">
+          {/* Quick Demo Role Switcher (Shown on login screen after sign-out) */}
+          <div className="mb-6 p-4 bg-gradient-to-br from-slate-50 to-indigo-50/40 border border-slate-200 rounded-2xl shadow-xs">
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-brand-600" />
+                Demo Role Switcher
+              </span>
+              <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200">
+                1-Click Switch
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => handleDemoFill('admin@brightloop.com', 'admin123')}
-                className="flex flex-col items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-purple-300 hover:bg-purple-50/50 text-center transition-colors shadow-xs"
+                disabled={loading}
+                onClick={() => handleInstantDemoLogin('admin@brightloop.com', 'admin123')}
+                className="flex flex-col items-center p-3 rounded-xl bg-white border border-slate-200 hover:border-purple-400 hover:bg-purple-50/60 text-center transition-all shadow-xs hover:scale-[1.02] active:scale-98 cursor-pointer group disabled:opacity-50"
+                title="Instant switch to Admin role"
               >
-                <Shield className="h-4 w-4 text-purple-600 mb-1" />
-                <p className="text-xs font-bold text-slate-900 truncate">Admin</p>
-                <p className="text-[10px] text-slate-500 truncate">admin123</p>
+                <div className="h-8 w-8 rounded-lg bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center text-purple-700 mb-1.5 transition-colors">
+                  <Shield className="h-4 w-4" />
+                </div>
+                <p className="text-xs font-bold text-slate-900">Admin</p>
+                <p className="text-[10px] text-slate-500">Alexander</p>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleDemoFill('staff@brightloop.com', 'staff123')}
-                className="flex flex-col items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-teal-300 hover:bg-teal-50/50 text-center transition-colors shadow-xs"
+                disabled={loading}
+                onClick={() => handleInstantDemoLogin('staff@brightloop.com', 'staff123')}
+                className="flex flex-col items-center p-3 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:bg-teal-50/60 text-center transition-all shadow-xs hover:scale-[1.02] active:scale-98 cursor-pointer group disabled:opacity-50"
+                title="Instant switch to Staff role"
               >
-                <Zap className="h-4 w-4 text-teal-600 mb-1" />
-                <p className="text-xs font-bold text-slate-900 truncate">Staff</p>
-                <p className="text-[10px] text-slate-500 truncate">staff123</p>
+                <div className="h-8 w-8 rounded-lg bg-teal-100 group-hover:bg-teal-200 flex items-center justify-center text-teal-700 mb-1.5 transition-colors">
+                  <Zap className="h-4 w-4" />
+                </div>
+                <p className="text-xs font-bold text-slate-900">Staff</p>
+                <p className="text-[10px] text-slate-500">Emma</p>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleDemoFill('sarah.jenkins@acme.com', 'customer123')}
-                className="flex flex-col items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-brand-300 hover:bg-brand-50/50 text-center transition-colors shadow-xs"
+                disabled={loading}
+                onClick={() => handleInstantDemoLogin('sarah.jenkins@acme.com', 'customer123')}
+                className="flex flex-col items-center p-3 rounded-xl bg-white border border-slate-200 hover:border-brand-400 hover:bg-brand-50/60 text-center transition-all shadow-xs hover:scale-[1.02] active:scale-98 cursor-pointer group disabled:opacity-50"
+                title="Instant switch to Customer role"
               >
-                <User className="h-4 w-4 text-brand-600 mb-1" />
-                <p className="text-xs font-bold text-slate-900 truncate">Customer</p>
-                <p className="text-[10px] text-slate-500 truncate">customer123</p>
+                <div className="h-8 w-8 rounded-lg bg-brand-100 group-hover:bg-brand-200 flex items-center justify-center text-brand-700 mb-1.5 transition-colors">
+                  <User className="h-4 w-4" />
+                </div>
+                <p className="text-xs font-bold text-slate-900">Customer</p>
+                <p className="text-[10px] text-slate-500">Sarah</p>
               </button>
             </div>
           </div>
