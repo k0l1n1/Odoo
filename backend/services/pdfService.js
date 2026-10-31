@@ -109,7 +109,7 @@ const pdfService = {
     doc.fillColor(textDark).fontSize(9).font('Helvetica').text('Recurring', 310, rowY + 16, { width: 90, align: 'center' });
 
     const netAmount = parseFloat(invoice.amount || 0).toFixed(2);
-    doc.fillColor(textDark).fontSize(10).font('Helvetica-Bold').text(`Rs. ${netAmount}`, 430, rowY + 16, { width: 110, align: 'right' });
+    doc.fillColor(textDark).fontSize(10).font('Helvetica-Bold').text(`₹${netAmount}`, 430, rowY + 16, { width: 110, align: 'right' });
 
     // --- 4. Summary & Totals Box ---
     const totalsY = rowY + rowHeight + 16;
@@ -120,12 +120,12 @@ const pdfService = {
 
     // Subtotal
     doc.fillColor(textMuted).fontSize(9).font('Helvetica').text('Subtotal:', totalsX + 16, totalsY + 12);
-    doc.fillColor(textDark).font('Helvetica-Bold').text(`Rs. ${netAmount}`, totalsX + 110, totalsY + 12, { width: 104, align: 'right' });
+    doc.fillColor(textDark).font('Helvetica-Bold').text(`₹${netAmount}`, totalsX + 110, totalsY + 12, { width: 104, align: 'right' });
 
     // Tax (GST)
     const taxAmount = parseFloat(invoice.tax_amount || 0).toFixed(2);
     doc.fillColor(textMuted).font('Helvetica').text('Tax (10% GST):', totalsX + 16, totalsY + 29);
-    doc.fillColor(textDark).font('Helvetica-Bold').text(`Rs. ${taxAmount}`, totalsX + 110, totalsY + 29, { width: 104, align: 'right' });
+    doc.fillColor(textDark).font('Helvetica-Bold').text(`₹${taxAmount}`, totalsX + 110, totalsY + 29, { width: 104, align: 'right' });
 
     // Divider Line
     doc.rect(totalsX + 16, totalsY + 47, totalsWidth - 32, 1).fill(borderSubtle);
@@ -133,7 +133,7 @@ const pdfService = {
     // Total Due
     const totalAmount = parseFloat(invoice.total_amount || 0).toFixed(2);
     doc.fillColor(primaryBrand).fontSize(11).font('Helvetica-Bold').text('Total Due:', totalsX + 16, totalsY + 58);
-    doc.text(`Rs. ${totalAmount}`, totalsX + 100, totalsY + 58, { width: 114, align: 'right' });
+    doc.text(`₹${totalAmount}`, totalsX + 100, totalsY + 58, { width: 114, align: 'right' });
 
     // --- 5. Legal & Footer Terms ---
     const footerY = 690;
@@ -141,7 +141,7 @@ const pdfService = {
 
     doc.fillColor(textDark).fontSize(8.5).font('Helvetica-Bold').text('Terms & Payment Information', 40, footerY + 12, { align: 'center', width: 515 });
     doc.fillColor(textMuted).fontSize(8).font('Helvetica').text(
-      'This invoice is computer-generated and legally valid under the Information Technology Act. All amounts are in Indian Rupees (INR / Rs.). For invoice reconciliations, please write to billing@brightloop.com.',
+      'This invoice is computer-generated and legally valid under the Information Technology Act. All amounts are in Indian Rupees (INR / ₹). For invoice reconciliations, please write to billing@brightloop.com.',
       40, footerY + 26, { align: 'center', width: 515 }
     );
     doc.text('Brightloop SaaS Billing Platform • Thank you for your partnership!', 40, footerY + 44, { align: 'center', width: 515 });
