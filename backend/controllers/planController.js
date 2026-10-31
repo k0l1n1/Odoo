@@ -36,7 +36,7 @@ const planController = {
 
   async createPlan(req, res) {
     try {
-      const { name, description, price, billing_cycle, features, status } = req.body;
+      const { name, description, price, discount_percentage, billing_cycle, features, status } = req.body;
 
       if (!name || price === undefined) {
         return res.status(400).json({ success: false, message: 'Plan name and price are required.' });
@@ -51,6 +51,7 @@ const planController = {
         name: name.trim(),
         description: description ? description.trim() : '',
         price: parseFloat(price),
+        discount_percentage: discount_percentage !== undefined ? parseFloat(discount_percentage) : 0,
         billing_cycle: cycle,
         features: parsedFeatures,
         status: status || 'active'
@@ -67,7 +68,7 @@ const planController = {
   async updatePlan(req, res) {
     try {
       const { id } = req.params;
-      const { name, description, price, billing_cycle, features, status } = req.body;
+      const { name, description, price, discount_percentage, billing_cycle, features, status } = req.body;
 
       const existingPlan = await Plan.getById(id);
       if (!existingPlan) {
@@ -88,6 +89,7 @@ const planController = {
         name: name !== undefined ? name.trim() : existingPlan.name,
         description: description !== undefined ? description.trim() : existingPlan.description,
         price: price !== undefined ? parseFloat(price) : existingPlan.price,
+        discount_percentage: discount_percentage !== undefined ? parseFloat(discount_percentage) : (existingPlan.discount_percentage || 0),
         billing_cycle: cycle,
         features: parsedFeatures,
         status: status || existingPlan.status

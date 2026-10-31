@@ -27,6 +27,7 @@ export default function Sidebar({ currentPath, onNavigate, mobileOpen, setMobile
     { name: 'Payments', path: '/admin/payments', icon: CreditCard },
     { name: 'Renewal Tracker', path: '/admin/renewals', icon: RefreshCw },
     { name: 'Customers', path: '/admin/customers', icon: Users },
+    ...(isAdmin ? [{ name: 'Staff Team', path: '/admin/staff', icon: UserCheck }] : [])
   ];
 
   const customerNav = [

@@ -15,6 +15,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const renewalRoutes = require('./routes/renewalRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const staffRoutes = require('./routes/staffRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -48,6 +49,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/renewals', renewalRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/staff', staffRoutes);
 
 // Error Handling
 app.use(notFound);

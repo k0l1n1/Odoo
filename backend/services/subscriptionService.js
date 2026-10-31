@@ -43,12 +43,16 @@ const subscriptionService = {
       auto_renew: autoRenew ? 1 : 0
     });
 
-    // 5. Generate initial invoice
+    // 5. Generate initial invoice with plan discount applied
+    const effectivePrice = plan.discount_percentage > 0
+      ? (plan.discounted_price || Math.round(plan.price * (1 - plan.discount_percentage / 100) * 100) / 100)
+      : plan.price;
+
     const invoice = await invoiceService.createInvoiceForSubscription({
       subscriptionId,
       userId,
-      planName: plan.name,
-      amount: plan.price,
+      planName: plan.discount_percentage > 0 ? `${plan.name} (${plan.discount_percentage}% OFF)` : plan.name,
+      amount: effectivePrice,
       invoiceType: 'subscription_new',
       daysDue: 7
     });

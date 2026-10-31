@@ -48,8 +48,27 @@ export default function SubscribeModal({ isOpen, onClose, plan, onSuccess }) {
           <div className="flex items-baseline justify-between mb-2">
             <h4 className="text-base font-bold text-slate-900">{plan.name} Tier</h4>
             <div className="text-right">
-              <span className="text-2xl font-black text-brand-600">${parseFloat(plan.price).toFixed(2)}</span>
-              <span className="text-xs text-slate-500 font-medium">/{plan.billing_cycle}</span>
+              {plan.discount_percentage > 0 ? (
+                <div>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <span className="text-xs line-through text-slate-400 font-medium">
+                      ${parseFloat(plan.price).toFixed(2)}
+                    </span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                      🏷️ {plan.discount_percentage}% OFF
+                    </span>
+                  </div>
+                  <span className="text-2xl font-black text-brand-600">
+                    ${parseFloat(plan.discounted_price || plan.price).toFixed(2)}
+                  </span>
+                  <span className="text-xs text-slate-500 font-medium">/{plan.billing_cycle}</span>
+                </div>
+              ) : (
+                <div>
+                  <span className="text-2xl font-black text-brand-600">${parseFloat(plan.price).toFixed(2)}</span>
+                  <span className="text-xs text-slate-500 font-medium">/{plan.billing_cycle}</span>
+                </div>
+              )}
             </div>
           </div>
           <p className="text-xs text-slate-600 mb-3">{plan.description}</p>

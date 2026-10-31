@@ -13,6 +13,7 @@ import InvoiceManagement from './pages/admin/InvoiceManagement';
 import PaymentManagement from './pages/admin/PaymentManagement';
 import RenewalTracker from './pages/admin/RenewalTracker';
 import CustomerManagement from './pages/admin/CustomerManagement';
+import StaffManagement from './pages/admin/StaffManagement';
 
 import CustomerDashboard from './pages/customer/CustomerDashboard';
 import BrowsePlans from './pages/customer/BrowsePlans';
@@ -95,6 +96,11 @@ export default function App() {
         title = 'Customer Accounts';
         subtitle = 'Client directory, active subscriptions, and lifetime value';
         PageComponent = <CustomerManagement onNavigate={navigate} />;
+        break;
+      case '/admin/staff':
+        title = 'Staff Team Management';
+        subtitle = 'Authorize and manage operational team members';
+        PageComponent = <StaffManagement onNavigate={navigate} />;
         break;
       default:
         title = 'Executive Analytics Dashboard';

@@ -237,15 +237,36 @@ export default function BrowsePlans({ onNavigate }) {
                 </p>
 
                 <div className="my-6 pb-6 border-b border-slate-100">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-slate-900">
-                      ${parseFloat(plan.price).toFixed(2)}
-                    </span>
-                    <span className="text-xs font-semibold text-slate-500">
-                      /{plan.billing_cycle}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-emerald-600 font-medium block mt-1">
+                  {plan.discount_percentage > 0 ? (
+                    <div>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-sm font-semibold line-through text-slate-400">
+                          ${parseFloat(plan.price).toFixed(2)}
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-xs">
+                          🏷️ {plan.discount_percentage}% OFF
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-black text-brand-600">
+                          ${parseFloat(plan.discounted_price || plan.price).toFixed(2)}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-500">
+                          /{plan.billing_cycle}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-black text-slate-900">
+                        ${parseFloat(plan.price).toFixed(2)}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-500">
+                        /{plan.billing_cycle}
+                      </span>
+                    </div>
+                  )}
+                  <span className="text-[11px] text-emerald-600 font-medium block mt-1.5">
                     ✓ Billed automatically every {plan.billing_cycle}
                   </span>
                 </div>

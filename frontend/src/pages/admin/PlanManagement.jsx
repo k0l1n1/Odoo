@@ -23,6 +23,7 @@ export default function PlanManagement() {
     name: '',
     description: '',
     price: '',
+    discount_percentage: '0',
     billing_cycle: 'monthly',
     featuresText: '',
     status: 'active'
@@ -52,6 +53,7 @@ export default function PlanManagement() {
       name: '',
       description: '',
       price: '',
+      discount_percentage: '0',
       billing_cycle: 'monthly',
       featuresText: 'Up to 10 team members\nCore subscription management\nStandard email support',
       status: 'active'
@@ -66,6 +68,7 @@ export default function PlanManagement() {
       name: plan.name,
       description: plan.description || '',
       price: plan.price,
+      discount_percentage: plan.discount_percentage ? String(plan.discount_percentage) : '0',
       billing_cycle: plan.billing_cycle || 'monthly',
       featuresText: featuresArr.join('\n'),
       status: plan.status || 'active'
@@ -82,12 +85,15 @@ export default function PlanManagement() {
       .map(f => f.trim())
       .filter(Boolean);
 
+    const discountPercentage = Math.min(100, Math.max(0, parseFloat(formData.discount_percentage) || 0));
+
     try {
       if (editingPlan) {
         await plansApi.update(editingPlan.id, {
           name: formData.name,
           description: formData.description,
           price: parseFloat(formData.price),
+          discount_percentage: discountPercentage,
           billing_cycle: formData.billing_cycle,
           features,
           status: formData.status
@@ -98,6 +104,7 @@ export default function PlanManagement() {
           name: formData.name,
           description: formData.description,
           price: parseFloat(formData.price),
+          discount_percentage: discountPercentage,
           billing_cycle: formData.billing_cycle,
           features,
           status: formData.status
@@ -294,10 +301,31 @@ export default function PlanManagement() {
                 </div>
 
                 <div className="my-3">
-                  <span className="text-2xl font-black text-slate-900">
-                    ${parseFloat(plan.price).toFixed(2)}
-                  </span>
-                  <span className="text-xs text-slate-500 font-medium">/{plan.billing_cycle}</span>
+                  {plan.discount_percentage > 0 ? (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-xs font-semibold line-through text-slate-400">
+                          ${parseFloat(plan.price).toFixed(2)}
+                        </span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          🏷️ {plan.discount_percentage}% OFF
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-black text-brand-600">
+                          ${parseFloat(plan.discounted_price || plan.price).toFixed(2)}
+                        </span>
+                        <span className="text-xs text-slate-500 font-medium">/{plan.billing_cycle}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <span className="text-2xl font-black text-slate-900">
+                        ${parseFloat(plan.price).toFixed(2)}
+                      </span>
+                      <span className="text-xs text-slate-500 font-medium">/{plan.billing_cycle}</span>
+                    </div>
+                  )}
                 </div>
 
                 <p className="text-xs text-slate-600 mb-4 line-clamp-2 min-h-[32px]">
@@ -376,7 +404,7 @@ export default function PlanManagement() {
             required
           />
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Input
               label="Price ($ USD)"
               type="number"
@@ -385,6 +413,22 @@ export default function PlanManagement() {
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
               required
+            />
+
+            <Input
+              label="Discount (%)"
+              type="number"
+              step="1"
+              min="0"
+              max="100"
+              placeholder="0"
+              value={formData.discount_percentage}
+              onChange={(e) => setFormData({ ...formData, discount_percentage: e.target.value })}
+              helperText={
+                formData.price && parseFloat(formData.discount_percentage) > 0
+                  ? `Effective: $${(parseFloat(formData.price) * (1 - parseFloat(formData.discount_percentage) / 100)).toFixed(2)}`
+                  : '0% = No discount'
+              }
             />
 
             <div>

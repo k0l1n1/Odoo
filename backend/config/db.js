@@ -20,12 +20,13 @@ if (supabaseUrl && supabaseKey) {
 // In-Memory Relational Cache / Fallback Store
 const store = {
   users: [],
+  staffUsers: [],
   subscription_plans: [],
   subscriptions: [],
   invoices: [],
   payments: [],
   renewal_history: [],
-  autoInc: { users: 7, subscription_plans: 5, subscriptions: 6, invoices: 7, payments: 4, renewal_history: 3 }
+  autoInc: { users: 7, staff: 101, subscription_plans: 5, subscriptions: 6, invoices: 7, payments: 4, renewal_history: 3 }
 };
 
 // Unified Query Handler connecting directly to live Supabase with fallback resilience
@@ -65,16 +66,25 @@ async function executeSupabaseDirect(sql, params) {
   if (lower.startsWith('select') && lower.includes('from users')) {
     if (lower.includes('email = ?')) {
       const email = String(params[0]).toLowerCase();
-      if (email === 'staff@brightloop.com') {
+      if (email === 'staff@brightloop.com' && defaultStaffUser.status !== 'removed') {
         return [[defaultStaffUser], []];
+      }
+      const staffMatch = (store.staffUsers || []).find(u => u.email.toLowerCase() === email && u.status !== 'removed');
+      if (staffMatch) {
+        return [[staffMatch], []];
       }
       const { data, error } = await supabase.from('users').select('*').ilike('email', params[0]);
       if (error) throw error;
       return [data || [], []];
     }
     if (lower.includes('id = ?')) {
-      if (Number(params[0]) === 99) {
+      const targetId = Number(params[0]);
+      if (targetId === 99 && defaultStaffUser.status !== 'removed') {
         return [[defaultStaffUser], []];
+      }
+      const staffMatch = (store.staffUsers || []).find(u => u.id === targetId && u.status !== 'removed');
+      if (staffMatch) {
+        return [[staffMatch], []];
       }
       const { data, error } = await supabase.from('users').select('*').eq('id', params[0]);
       if (error) throw error;
@@ -82,7 +92,14 @@ async function executeSupabaseDirect(sql, params) {
     }
     if (lower.includes('role = ?')) {
       if (String(params[0]).toLowerCase() === 'staff') {
-        return [[defaultStaffUser], []];
+        const staffList = [];
+        if (defaultStaffUser.status !== 'removed') staffList.push(defaultStaffUser);
+        for (const s of (store.staffUsers || [])) {
+          if (s.status !== 'removed' && !staffList.some(x => x.id === s.id)) {
+            staffList.push(s);
+          }
+        }
+        return [staffList, []];
       }
       const { data, error } = await supabase.from('users').select('*').eq('role', params[0]).order('id', { ascending: false });
       if (error) throw error;
@@ -91,8 +108,13 @@ async function executeSupabaseDirect(sql, params) {
     const { data, error } = await supabase.from('users').select('*').order('id', { ascending: false });
     if (error) throw error;
     const allUsers = [...(data || [])];
-    if (!allUsers.some(u => u.id === 99 || u.email === 'staff@brightloop.com')) {
+    if (defaultStaffUser.status !== 'removed' && !allUsers.some(u => u.id === 99 || u.email === 'staff@brightloop.com')) {
       allUsers.push(defaultStaffUser);
+    }
+    for (const s of (store.staffUsers || [])) {
+      if (s.status !== 'removed' && !allUsers.some(u => u.id === s.id)) {
+        allUsers.push(s);
+      }
     }
     return [allUsers, []];
   }
@@ -268,7 +290,7 @@ async function executeSupabaseDirect(sql, params) {
 
   // 7. INSERT Operations
   if (lower.startsWith('insert into users')) {
-    const nextId = await getNextId('users');
+    const nextId = (await getNextId('users')) || store.autoInc.staff++;
     const insertObj = {
       name: params[0],
       email: params[1],
@@ -277,9 +299,19 @@ async function executeSupabaseDirect(sql, params) {
       company_name: params[4] || null,
       phone: params[5] || null,
       address: params[6] || null,
-      status: params[7] || 'active'
+      status: params[7] || 'active',
+      created_at: new Date().toISOString()
     };
     if (nextId) insertObj.id = nextId;
+
+    if (insertObj.role === 'staff') {
+      if (!store.staffUsers) store.staffUsers = [];
+      store.staffUsers.push(insertObj);
+      try {
+        await supabase.from('users').insert(insertObj);
+      } catch (e) {}
+      return [{ insertId: nextId, affectedRows: 1 }, []];
+    }
 
     const { data, error } = await supabase.from('users').insert(insertObj).select('id');
     if (error) throw error;
@@ -478,6 +510,21 @@ async function executeSupabaseDirect(sql, params) {
       updated_at: new Date().toISOString()
     }).eq('id', id);
     if (error) throw error;
+    return [{ affectedRows: 1 }, []];
+  }
+
+  if (lower.startsWith('delete from users')) {
+    const id = Number(params[0]);
+    if (id === 99) {
+      defaultStaffUser.status = 'removed';
+    }
+    if (store.staffUsers) {
+      const idx = store.staffUsers.findIndex(u => u.id === id);
+      if (idx !== -1) store.staffUsers.splice(idx, 1);
+    }
+    try {
+      await supabase.from('users').delete().eq('id', id);
+    } catch (e) {}
     return [{ affectedRows: 1 }, []];
   }
 

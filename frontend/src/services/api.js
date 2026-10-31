@@ -100,4 +100,11 @@ export const dashboardApi = {
   getCustomer: () => api.get('/dashboard/customer')
 };
 
+// Staff endpoints
+export const staffApi = {
+  getAll: () => api.get('/staff'),
+  create: (data) => api.post('/staff', data),
+  remove: (id) => api.delete(`/staff/${id}`)
+};
+
 export default api;
