@@ -42,6 +42,20 @@ async function query(sql, params = []) {
   return executeFallbackQuery(sql, params);
 }
 
+const defaultStaffUser = {
+  id: 99,
+  name: 'Emma Watson',
+  email: 'staff@brightloop.com',
+  password: '$2a$10$Ffk1aNH5jq7S0oECdycy9ODJreEevoKskXKVGqnV.0.oc4xQkxO0G', // staff123
+  role: 'staff',
+  company_name: 'Brightloop Operations HQ',
+  phone: '+1 (555) 234-5678',
+  address: 'Brightloop Operations Suite 400, Austin, TX',
+  status: 'active',
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+};
+
 // Live Supabase Direct Handler
 async function executeSupabaseDirect(sql, params) {
   const cleanSql = sql.trim().replace(/\s+/g, ' ');
@@ -50,23 +64,37 @@ async function executeSupabaseDirect(sql, params) {
   // 1. SELECT Users
   if (lower.startsWith('select') && lower.includes('from users')) {
     if (lower.includes('email = ?')) {
+      const email = String(params[0]).toLowerCase();
+      if (email === 'staff@brightloop.com') {
+        return [[defaultStaffUser], []];
+      }
       const { data, error } = await supabase.from('users').select('*').ilike('email', params[0]);
       if (error) throw error;
       return [data || [], []];
     }
     if (lower.includes('id = ?')) {
+      if (Number(params[0]) === 99) {
+        return [[defaultStaffUser], []];
+      }
       const { data, error } = await supabase.from('users').select('*').eq('id', params[0]);
       if (error) throw error;
       return [data || [], []];
     }
     if (lower.includes('role = ?')) {
+      if (String(params[0]).toLowerCase() === 'staff') {
+        return [[defaultStaffUser], []];
+      }
       const { data, error } = await supabase.from('users').select('*').eq('role', params[0]).order('id', { ascending: false });
       if (error) throw error;
       return [data || [], []];
     }
     const { data, error } = await supabase.from('users').select('*').order('id', { ascending: false });
     if (error) throw error;
-    return [data || [], []];
+    const allUsers = [...(data || [])];
+    if (!allUsers.some(u => u.id === 99 || u.email === 'staff@brightloop.com')) {
+      allUsers.push(defaultStaffUser);
+    }
+    return [allUsers, []];
   }
 
   // 2. SELECT Subscription Plans

@@ -22,7 +22,7 @@ import MyPayments from './pages/customer/MyPayments';
 import Profile from './pages/customer/Profile';
 
 export default function App() {
-  const { user, isAuthenticated, isAdmin, loading } = useAuth();
+  const { user, isAuthenticated, isAdmin, isStaff, isStaffOrAdmin, loading } = useAuth();
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname || '/');
 
   const navigate = (path) => {
@@ -56,12 +56,14 @@ export default function App() {
   let subtitle = '';
   let PageComponent = null;
 
-  if (isAdmin) {
+  if (isStaffOrAdmin) {
     switch (currentPath) {
       case '/admin':
       case '/':
-        title = 'Executive Analytics Dashboard';
-        subtitle = 'Revenue metrics, active subscriptions, and renewal tracking';
+        title = isStaff ? 'Staff Operations Dashboard' : 'Executive Analytics Dashboard';
+        subtitle = isStaff
+          ? 'Monitor subscriptions, customer accounts, and billing operations'
+          : 'Revenue metrics, active subscriptions, and renewal tracking';
         PageComponent = <AdminDashboard onNavigate={navigate} />;
         break;
       case '/admin/subscriptions':

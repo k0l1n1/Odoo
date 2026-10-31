@@ -26,7 +26,8 @@ For quick evaluation, pre-seeded accounts are provided. The login page also feat
 
 | Role | Email | Password | Account Details |
 | :--- | :--- | :--- | :--- |
-| **Administrator** | `admin@brightloop.com` | `admin123` | Alexander Wright (Brightloop HQ) |
+| **Administrator** | `admin@brightloop.com` | `admin123` | Alexander Wright (Brightloop HQ) – Full Control |
+| **Staff Operations** | `staff@brightloop.com` | `staff123` | Emma Watson (Operations & Support) – Operational Access |
 | **Customer 1** | `sarah.jenkins@acme.com` | `customer123` | Sarah Jenkins (Acme Corp) – Active Professional Tier |
 | **Customer 2** | `michael.chen@techflow.io` | `customer123` | Michael Chen (TechFlow Solutions) – Enterprise Tier |
 | **Customer 3** | `elena.rostova@cloudscale.net` | `customer123` | Elena Rostova (CloudScale AI) – Starter Tier |

@@ -3,7 +3,7 @@ import { Menu, Zap, Shield, User, ArrowLeftRight, Check, ChevronDown } from 'luc
 import { useAuth } from '../../context/AuthContext';
 
 export default function Topbar({ title, subtitle, onToggleMobile }) {
-  const { user, isAdmin, login } = useAuth();
+  const { user, isAdmin, isStaff, login } = useAuth();
   const [switching, setSwitching] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -13,6 +13,8 @@ export default function Topbar({ title, subtitle, onToggleMobile }) {
     try {
       if (role === 'admin') {
         await login('admin@brightloop.com', 'admin123');
+      } else if (role === 'staff') {
+        await login('staff@brightloop.com', 'staff123');
       } else {
         await login('sarah.jenkins@acme.com', 'customer123');
       }
@@ -22,6 +24,8 @@ export default function Topbar({ title, subtitle, onToggleMobile }) {
       setSwitching(false);
     }
   };
+
+  const currentRoleLabel = isAdmin ? 'Admin' : (isStaff ? 'Staff' : 'Customer');
 
   return (
     <header className="sticky top-0 z-30 h-16 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between gap-4">
@@ -58,12 +62,12 @@ export default function Topbar({ title, subtitle, onToggleMobile }) {
           >
             <ArrowLeftRight className="h-3.5 w-3.5 text-brand-600" />
             <span className="hidden sm:inline">Demo Switch:</span>
-            <span className="font-semibold text-slate-900">{isAdmin ? 'Admin' : 'Customer'}</span>
+            <span className="font-semibold text-slate-900">{currentRoleLabel}</span>
             <ChevronDown className="h-3 w-3 text-slate-400" />
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white p-2 shadow-xl border border-slate-200/80 ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-100 z-50">
+            <div className="absolute right-0 mt-2 w-64 rounded-xl bg-white p-2 shadow-xl border border-slate-200/80 ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-100 z-50">
               <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-2 py-1 mb-1">
                 Switch Demo Role
               </div>
@@ -83,16 +87,30 @@ export default function Topbar({ title, subtitle, onToggleMobile }) {
 
               <button
                 type="button"
+                onClick={() => handleQuickSwitch('staff')}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors mt-1 ${
+                  isStaff ? 'bg-teal-50 text-teal-700 font-semibold' : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Zap className="h-3.5 w-3.5 text-teal-600" />
+                  <span>Staff (Emma Watson)</span>
+                </div>
+                {isStaff && <Check className="h-3.5 w-3.5 text-teal-600" />}
+              </button>
+
+              <button
+                type="button"
                 onClick={() => handleQuickSwitch('customer')}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors mt-1 ${
-                  !isAdmin ? 'bg-brand-50 text-brand-700 font-semibold' : 'text-slate-700 hover:bg-slate-50'
+                  !isAdmin && !isStaff ? 'bg-brand-50 text-brand-700 font-semibold' : 'text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <User className="h-3.5 w-3.5 text-brand-600" />
                   <span>Customer (Sarah Jenkins)</span>
                 </div>
-                {!isAdmin && <Check className="h-3.5 w-3.5 text-brand-600" />}
+                {!isAdmin && !isStaff && <Check className="h-3.5 w-3.5 text-brand-600" />}
               </button>
             </div>
           )}
@@ -107,9 +125,12 @@ export default function Topbar({ title, subtitle, onToggleMobile }) {
           <span>Cron Active</span>
         </div>
 
-        {/* User Avatar */}
+        {/* User Avatar & Role */}
         <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-semibold text-xs flex items-center justify-center shadow-xs">
+          <div className={`h-8 w-8 rounded-full font-semibold text-xs flex items-center justify-center shadow-xs text-white ${
+            isAdmin ? 'bg-gradient-to-tr from-purple-600 to-indigo-600' :
+            (isStaff ? 'bg-gradient-to-tr from-teal-600 to-emerald-600' : 'bg-gradient-to-tr from-brand-600 to-blue-600')
+          }`}>
             {user?.name?.slice(0, 1) || 'U'}
           </div>
         </div>

@@ -17,13 +17,13 @@ TRUNCATE TABLE users RESTART IDENTITY CASCADE;
 -- ----------------------------------------------------------
 -- 1. USERS
 -- ----------------------------------------------------------
-INSERT INTO users (id, name, email, password, role, company_name, phone, address, status, created_at) VALUES
 (1, 'Alexander Wright', 'admin@brightloop.com', '$2a$10$QO0R5x5/uTqfR7YI9D6X6O9sZfZ3X4qZgR6lC9hE7U1.zM1tC8Y8e', 'admin', 'Brightloop Software HQ', '+1 (555) 019-2834', '100 Innovation Way, Suite 400, San Francisco, CA 94107', 'active', '2026-01-10 09:00:00+00'),
-(2, 'Sarah Jenkins', 'sarah.jenkins@acme.com', '$2a$10$2VzWcOqBfJtW1qK7V8hSHeoBf9n5M9mH.p3x6.eA1R3Y2s7fK4X8m', 'customer', 'Acme Corporation', '+1 (555) 432-8910', '742 Evergreen Terrace, Springfield, OR 97477', 'active', '2026-01-15 11:20:00+00'),
-(3, 'Michael Chen', 'michael.chen@techflow.io', '$2a$10$2VzWcOqBfJtW1qK7V8hSHeoBf9n5M9mH.p3x6.eA1R3Y2s7fK4X8m', 'customer', 'TechFlow Solutions', '+1 (555) 876-5432', '452 Tech Parkway, Austin, TX 78701', 'active', '2026-02-01 14:15:00+00'),
-(4, 'Elena Rostova', 'elena.rostova@cloudscale.net', '$2a$10$2VzWcOqBfJtW1qK7V8hSHeoBf9n5M9mH.p3x6.eA1R3Y2s7fK4X8m', 'customer', 'CloudScale AI', '+1 (555) 321-9876', '88 Silicon Boulevard, Seattle, WA 98101', 'active', '2026-02-18 10:45:00+00'),
-(5, 'David Kim', 'david.kim@finpulse.co', '$2a$10$2VzWcOqBfJtW1qK7V8hSHeoBf9n5M9mH.p3x6.eA1R3Y2s7fK4X8m', 'customer', 'FinPulse Global', '+1 (555) 654-3210', '12 Wall Street Tower, New York, NY 10005', 'active', '2026-03-05 16:30:00+00'),
-(6, 'Priya Sharma', 'priya.sharma@innovatex.org', '$2a$10$2VzWcOqBfJtW1qK7V8hSHeoBf9n5M9mH.p3x6.eA1R3Y2s7fK4X8m', 'customer', 'InnovateX Labs', '+1 (555) 987-1234', '200 Research Drive, Boston, MA 02115', 'active', '2026-03-20 08:50:00+00');
+(2, 'Emma Watson', 'staff@brightloop.com', '$2a$10$Ffk1aNH5jq7S0oECdycy9ODJreEevoKskXKVGqnV.0.oc4xQkxO0G', 'staff', 'Brightloop Operations HQ', '+1 (555) 234-5678', 'Brightloop Operations Suite 400, Austin, TX 78701', 'active', '2026-01-12 10:00:00+00'),
+(3, 'Sarah Jenkins', 'sarah.jenkins@acme.com', '$2a$10$2VzWcOqBfJtW1qK7V8hSHeoBf9n5M9mH.p3x6.eA1R3Y2s7fK4X8m', 'customer', 'Acme Corporation', '+1 (555) 432-8910', '742 Evergreen Terrace, Springfield, OR 97477', 'active', '2026-01-15 11:20:00+00'),
+(4, 'Michael Chen', 'michael.chen@techflow.io', '$2a$10$2VzWcOqBfJtW1qK7V8hSHeoBf9n5M9mH.p3x6.eA1R3Y2s7fK4X8m', 'customer', 'TechFlow Solutions', '+1 (555) 876-5432', '452 Tech Parkway, Austin, TX 78701', 'active', '2026-02-01 14:15:00+00'),
+(5, 'Elena Rostova', 'elena.rostova@cloudscale.net', '$2a$10$2VzWcOqBfJtW1qK7V8hSHeoBf9n5M9mH.p3x6.eA1R3Y2s7fK4X8m', 'customer', 'CloudScale AI', '+1 (555) 321-9876', '88 Silicon Boulevard, Seattle, WA 98101', 'active', '2026-02-18 10:45:00+00'),
+(6, 'David Kim', 'david.kim@finpulse.co', '$2a$10$2VzWcOqBfJtW1qK7V8hSHeoBf9n5M9mH.p3x6.eA1R3Y2s7fK4X8m', 'customer', 'FinPulse Global', '+1 (555) 654-3210', '12 Wall Street Tower, New York, NY 10005', 'active', '2026-03-05 16:30:00+00'),
+(7, 'Priya Sharma', 'priya.sharma@innovatex.org', '$2a$10$2VzWcOqBfJtW1qK7V8hSHeoBf9n5M9mH.p3x6.eA1R3Y2s7fK4X8m', 'customer', 'InnovateX Labs', '+1 (555) 987-1234', '200 Research Drive, Boston, MA 02115', 'active', '2026-03-20 08:50:00+00');
 
 SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
 

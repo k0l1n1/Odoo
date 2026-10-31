@@ -43,6 +43,20 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+function requireStaffOrAdmin(req, res, next) {
+  if (!req.user || !['admin', 'staff'].includes(req.user.role)) {
+    return res.status(403).json({ success: false, message: 'Access denied. Staff or Administrator privileges required.' });
+  }
+  next();
+}
+
+function requireStaff(req, res, next) {
+  if (!req.user || req.user.role !== 'staff') {
+    return res.status(403).json({ success: false, message: 'Access denied. Staff privileges required.' });
+  }
+  next();
+}
+
 function requireCustomer(req, res, next) {
   if (!req.user || req.user.role !== 'customer') {
     return res.status(403).json({ success: false, message: 'Access denied. Customer privileges required.' });
@@ -53,5 +67,7 @@ function requireCustomer(req, res, next) {
 module.exports = {
   verifyToken,
   requireAdmin,
+  requireStaffOrAdmin,
+  requireStaff,
   requireCustomer
 };

@@ -6,9 +6,11 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Toast from '../../components/common/Toast';
 import { customersApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { Search, Users, RefreshCw, Mail, Phone, Building } from 'lucide-react';
 
 export default function CustomerManagement() {
+  const { isAdmin } = useAuth();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -98,7 +100,7 @@ export default function CustomerManagement() {
       header: 'Account Status',
       render: (row) => <Badge status={row.status} size="sm" />
     },
-    {
+    ...(isAdmin ? [{
       header: 'Action',
       className: 'text-right',
       cellClassName: 'text-right',
@@ -113,7 +115,7 @@ export default function CustomerManagement() {
           {row.status === 'active' ? 'Deactivate' : 'Activate'}
         </button>
       )
-    }
+    }] : [])
   ];
 
   return (

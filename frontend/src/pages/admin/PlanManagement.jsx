@@ -7,9 +7,11 @@ import Modal from '../../components/common/Modal';
 import Toast from '../../components/common/Toast';
 import Loading from '../../components/common/Loading';
 import { plansApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { Plus, Edit2, Trash2, Check, Sparkles, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function PlanManagement() {
+  const { isAdmin } = useAuth();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -337,16 +339,18 @@ export default function PlanManagement() {
                   >
                     Edit
                   </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    icon={Trash2}
-                    className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                    onClick={() => handleDelete(plan.id)}
-                  >
-                    Delete
-                  </Button>
+                  {isAdmin && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      icon={Trash2}
+                      className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                      onClick={() => handleDelete(plan.id)}
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import { Layers, Lock, Mail, Shield, User, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Layers, Lock, Mail, Shield, User, ArrowRight, CheckCircle2, Zap } from 'lucide-react';
 
 export default function Login({ onNavigate }) {
   const { login } = useAuth();
@@ -17,7 +17,7 @@ export default function Login({ onNavigate }) {
     setError(null);
     try {
       const res = await login(email, password);
-      if (res.user?.role === 'admin') {
+      if (res.user?.role === 'admin' || res.user?.role === 'staff') {
         onNavigate('/admin');
       } else {
         onNavigate('/customer');
@@ -60,29 +60,35 @@ export default function Login({ onNavigate }) {
             <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
               Hackathon Instant Demo Logins
             </span>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               <button
                 type="button"
                 onClick={() => handleDemoFill('admin@brightloop.com', 'admin123')}
-                className="flex items-center gap-1.5 p-2 rounded-lg bg-white border border-slate-200 hover:border-purple-300 hover:bg-purple-50/50 text-left transition-colors shadow-xs"
+                className="flex flex-col items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-purple-300 hover:bg-purple-50/50 text-center transition-colors shadow-xs"
               >
-                <Shield className="h-4 w-4 text-purple-600 flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 truncate">Admin</p>
-                  <p className="text-[10px] text-slate-500 truncate">admin123</p>
-                </div>
+                <Shield className="h-4 w-4 text-purple-600 mb-1" />
+                <p className="text-xs font-bold text-slate-900 truncate">Admin</p>
+                <p className="text-[10px] text-slate-500 truncate">admin123</p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDemoFill('staff@brightloop.com', 'staff123')}
+                className="flex flex-col items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-teal-300 hover:bg-teal-50/50 text-center transition-colors shadow-xs"
+              >
+                <Zap className="h-4 w-4 text-teal-600 mb-1" />
+                <p className="text-xs font-bold text-slate-900 truncate">Staff</p>
+                <p className="text-[10px] text-slate-500 truncate">staff123</p>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleDemoFill('sarah.jenkins@acme.com', 'customer123')}
-                className="flex items-center gap-1.5 p-2 rounded-lg bg-white border border-slate-200 hover:border-brand-300 hover:bg-brand-50/50 text-left transition-colors shadow-xs"
+                className="flex flex-col items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-brand-300 hover:bg-brand-50/50 text-center transition-colors shadow-xs"
               >
-                <User className="h-4 w-4 text-brand-600 flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 truncate">Customer</p>
-                  <p className="text-[10px] text-slate-500 truncate">customer123</p>
-                </div>
+                <User className="h-4 w-4 text-brand-600 mb-1" />
+                <p className="text-xs font-bold text-slate-900 truncate">Customer</p>
+                <p className="text-[10px] text-slate-500 truncate">customer123</p>
               </button>
             </div>
           </div>

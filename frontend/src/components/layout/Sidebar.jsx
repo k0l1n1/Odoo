@@ -17,7 +17,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 
 export default function Sidebar({ currentPath, onNavigate, mobileOpen, setMobileOpen }) {
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, isStaff, isStaffOrAdmin, logout } = useAuth();
 
   const adminNav = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
@@ -38,7 +38,7 @@ export default function Sidebar({ currentPath, onNavigate, mobileOpen, setMobile
     { name: 'My Profile', path: '/customer/profile', icon: User },
   ];
 
-  const navItems = isAdmin ? adminNav : customerNav;
+  const navItems = isStaffOrAdmin ? adminNav : customerNav;
 
   const handleNavClick = (path) => {
     onNavigate(path);
@@ -81,10 +81,18 @@ export default function Sidebar({ currentPath, onNavigate, mobileOpen, setMobile
           <div className={`p-2.5 rounded-lg flex items-center gap-2 text-xs font-medium border ${
             isAdmin
               ? 'bg-purple-950/40 border-purple-800/50 text-purple-300'
-              : 'bg-brand-950/40 border-brand-800/50 text-brand-300'
+              : (isStaff
+                  ? 'bg-teal-950/40 border-teal-800/50 text-teal-300'
+                  : 'bg-brand-950/40 border-brand-800/50 text-brand-300')
           }`}>
-            {isAdmin ? <ShieldCheck className="h-4 w-4 text-purple-400" /> : <UserCheck className="h-4 w-4 text-brand-400" />}
-            <span>Portal: <strong>{isAdmin ? 'Admin Control' : 'Customer Workspace'}</strong></span>
+            {isAdmin ? (
+              <ShieldCheck className="h-4 w-4 text-purple-400" />
+            ) : isStaff ? (
+              <Sparkles className="h-4 w-4 text-teal-400" />
+            ) : (
+              <UserCheck className="h-4 w-4 text-brand-400" />
+            )}
+            <span>Portal: <strong>{isAdmin ? 'Admin Control' : (isStaff ? 'Staff Operations' : 'Customer Workspace')}</strong></span>
           </div>
         </div>
 
