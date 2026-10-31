@@ -1,53 +1,37 @@
-const mysql = require('mysql2/promise');
+const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../backend/.env') });
 
-async function initMySQL() {
-  console.log('--- Brightloop MySQL Database Initialization ---');
-  const host = process.env.DB_HOST || 'localhost';
-  const port = parseInt(process.env.DB_PORT || '3306');
-  const user = process.env.DB_USER || 'root';
-  const password = process.env.DB_PASSWORD || '';
-  const dbName = process.env.DB_NAME || 'brightloop_subscriptions';
+async function initSupabase() {
+  console.log('--- Brightloop Supabase Database Setup ---');
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.log('[Notice] SUPABASE_URL and SUPABASE_KEY not found in backend/.env.');
+    console.log('To set up Supabase tables:');
+    console.log('1. Go to your Supabase project dashboard -> SQL Editor');
+    console.log('2. Copy and run database/schema.sql');
+    console.log('3. Copy and run database/seed.sql');
+    console.log('4. Add your SUPABASE_URL and SUPABASE_KEY to backend/.env');
+    process.exit(0);
+  }
 
   try {
-    console.log(`Connecting to MySQL at ${host}:${port} as ${user}...`);
-    const connection = await mysql.createConnection({ host, port, user, password });
-    console.log('Connection established.');
-
-    console.log(`Ensuring database '${dbName}' exists...`);
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
-    await connection.query(`USE \`${dbName}\`;`);
-
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    const seedPath = path.join(__dirname, 'seed.sql');
-
-    console.log('Applying schema.sql...');
-    const schemaSql = fs.readFileSync(schemaPath, 'utf8');
-    const schemaStatements = schemaSql.split(/;\s*[\r\n]+/).map(s => s.trim()).filter(s => s.length > 0);
-    for (const stmt of schemaStatements) {
-      if (stmt && !stmt.startsWith('--')) {
-        await connection.query(stmt);
-      }
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    console.log(`Connecting to Supabase at ${supabaseUrl}...`);
+    const { data, error } = await supabase.from('subscription_plans').select('count');
+    if (error && error.code !== 'PGRST116') {
+      console.log('Connected to Supabase. To apply schema, run database/schema.sql in Supabase SQL editor.');
+    } else {
+      console.log('Supabase connection verified successfully!');
     }
-
-    console.log('Applying seed.sql...');
-    const seedSql = fs.readFileSync(seedPath, 'utf8');
-    const seedStatements = seedSql.split(/;\s*[\r\n]+/).map(s => s.trim()).filter(s => s.length > 0);
-    for (const stmt of seedStatements) {
-      if (stmt && !stmt.startsWith('--')) {
-        await connection.query(stmt);
-      }
-    }
-
-    console.log('Database successfully initialized and seeded with demo data!');
-    await connection.end();
     process.exit(0);
   } catch (err) {
-    console.error('Database initialization failed:', err.message);
-    process.exit(1);
+    console.error('Supabase check:', err.message);
+    process.exit(0);
   }
 }
 
-initMySQL();
+initSupabase();

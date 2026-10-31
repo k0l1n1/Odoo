@@ -1,13 +1,48 @@
-const mysql = require('mysql2/promise');
+const { createClient } = require('@supabase/supabase-js');
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
-const fs = require('fs');
-const path = require('path');
 require('dotenv').config();
 
-let pool = null;
-let useFallback = process.env.DB_FORCE_FALLBACK === 'true';
+let supabase = null;
+let pgPool = null;
+let useFallback = true;
 
-// Fallback in-memory relational store
+// 1. Initialize Supabase Client if credentials are provided
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY;
+
+if (supabaseUrl && supabaseKey && !supabaseUrl.includes('your-project')) {
+  try {
+    supabase = createClient(supabaseUrl, supabaseKey);
+    console.log('[Supabase] Initialized Supabase client for URL:', supabaseUrl);
+    useFallback = false;
+  } catch (err) {
+    console.warn('[Supabase] Initialization warning:', err.message);
+  }
+}
+
+// 2. Initialize PostgreSQL Pool if DATABASE_URL (Supabase connection string) is provided
+const dbUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;
+if (dbUrl && !dbUrl.includes('placeholder')) {
+  try {
+    pgPool = new Pool({
+      connectionString: dbUrl,
+      ssl: { rejectUnauthorized: false }
+    });
+    pgPool.query('SELECT NOW()', (err, res) => {
+      if (!err) {
+        console.log('[Supabase] Connected directly to Supabase PostgreSQL database!');
+        useFallback = false;
+      } else {
+        console.warn('[Supabase] Direct connection notice:', err.message);
+      }
+    });
+  } catch (err) {
+    console.warn('[Supabase PG Pool]', err.message);
+  }
+}
+
+// 3. Fallback in-memory relational store
 const store = {
   users: [],
   subscription_plans: [],
@@ -25,7 +60,6 @@ const store = {
   }
 };
 
-// Seed initial memory store
 function seedMemoryStore() {
   const adminHash = bcrypt.hashSync('admin123', 10);
   const custHash = bcrypt.hashSync('customer123', 10);
@@ -41,8 +75,8 @@ function seedMemoryStore() {
       phone: '+1 (555) 019-2834',
       address: '100 Innovation Way, Suite 400, San Francisco, CA 94107',
       status: 'active',
-      created_at: '2026-01-10 09:00:00',
-      updated_at: '2026-01-10 09:00:00'
+      created_at: '2026-01-10 09:00:00+00',
+      updated_at: '2026-01-10 09:00:00+00'
     },
     {
       id: 2,
@@ -54,8 +88,8 @@ function seedMemoryStore() {
       phone: '+1 (555) 432-8910',
       address: '742 Evergreen Terrace, Springfield, OR 97477',
       status: 'active',
-      created_at: '2026-01-15 11:20:00',
-      updated_at: '2026-01-15 11:20:00'
+      created_at: '2026-01-15 11:20:00+00',
+      updated_at: '2026-01-15 11:20:00+00'
     },
     {
       id: 3,
@@ -67,8 +101,8 @@ function seedMemoryStore() {
       phone: '+1 (555) 876-5432',
       address: '452 Tech Parkway, Austin, TX 78701',
       status: 'active',
-      created_at: '2026-02-01 14:15:00',
-      updated_at: '2026-02-01 14:15:00'
+      created_at: '2026-02-01 14:15:00+00',
+      updated_at: '2026-02-01 14:15:00+00'
     },
     {
       id: 4,
@@ -80,8 +114,8 @@ function seedMemoryStore() {
       phone: '+1 (555) 321-9876',
       address: '88 Silicon Boulevard, Seattle, WA 98101',
       status: 'active',
-      created_at: '2026-02-18 10:45:00',
-      updated_at: '2026-02-18 10:45:00'
+      created_at: '2026-02-18 10:45:00+00',
+      updated_at: '2026-02-18 10:45:00+00'
     },
     {
       id: 5,
@@ -93,8 +127,8 @@ function seedMemoryStore() {
       phone: '+1 (555) 654-3210',
       address: '12 Wall Street Tower, New York, NY 10005',
       status: 'active',
-      created_at: '2026-03-05 16:30:00',
-      updated_at: '2026-03-05 16:30:00'
+      created_at: '2026-03-05 16:30:00+00',
+      updated_at: '2026-03-05 16:30:00+00'
     },
     {
       id: 6,
@@ -106,8 +140,8 @@ function seedMemoryStore() {
       phone: '+1 (555) 987-1234',
       address: '200 Research Drive, Boston, MA 02115',
       status: 'active',
-      created_at: '2026-03-20 08:50:00',
-      updated_at: '2026-03-20 08:50:00'
+      created_at: '2026-03-20 08:50:00+00',
+      updated_at: '2026-03-20 08:50:00+00'
     }
   ];
 
@@ -118,17 +152,17 @@ function seedMemoryStore() {
       description: 'Essential subscription infrastructure for early-stage startups and small projects.',
       price: 29.00,
       billing_cycle: 'monthly',
-      features: JSON.stringify([
+      features: [
         'Up to 5 team members',
         'Core subscription management',
         'Standard payment gateway',
         'Automated email invoices',
         '5GB secure storage',
         'Community & email support'
-      ]),
+      ],
       status: 'active',
-      created_at: '2026-01-01 00:00:00',
-      updated_at: '2026-01-01 00:00:00'
+      created_at: '2026-01-01 00:00:00+00',
+      updated_at: '2026-01-01 00:00:00+00'
     },
     {
       id: 2,
@@ -136,7 +170,7 @@ function seedMemoryStore() {
       description: 'Powerful subscription automation, recurring revenue analytics, and priority handling.',
       price: 79.00,
       billing_cycle: 'monthly',
-      features: JSON.stringify([
+      features: [
         'Up to 25 team members',
         'Real-time MRR & churn reports',
         'Multi-method simulated payment',
@@ -144,10 +178,10 @@ function seedMemoryStore() {
         'Priority email & chat support',
         'Customizable invoice templates',
         'Full audit & export logs'
-      ]),
+      ],
       status: 'active',
-      created_at: '2026-01-01 00:00:00',
-      updated_at: '2026-01-01 00:00:00'
+      created_at: '2026-01-01 00:00:00+00',
+      updated_at: '2026-01-01 00:00:00+00'
     },
     {
       id: 3,
@@ -155,7 +189,7 @@ function seedMemoryStore() {
       description: 'Dedicated infrastructure, high-volume automated renewals, custom SLA, and team roles.',
       price: 199.00,
       billing_cycle: 'monthly',
-      features: JSON.stringify([
+      features: [
         'Unlimited team members',
         'Dedicated database instance',
         'Real-time financial analytics',
@@ -164,10 +198,10 @@ function seedMemoryStore() {
         'Custom domain & branding',
         'Role-based permissions',
         'Dedicated Account Manager'
-      ]),
+      ],
       status: 'active',
-      created_at: '2026-01-01 00:00:00',
-      updated_at: '2026-01-01 00:00:00'
+      created_at: '2026-01-01 00:00:00+00',
+      updated_at: '2026-01-01 00:00:00+00'
     },
     {
       id: 4,
@@ -175,17 +209,17 @@ function seedMemoryStore() {
       description: 'Cost-effective annual bundle with 2 months free and full feature access.',
       price: 790.00,
       billing_cycle: 'yearly',
-      features: JSON.stringify([
+      features: [
         'Up to 20 team members',
         'Full financial analytics suite',
         'Unlimited invoices & payments',
         'Automated annual renewal handling',
         'Priority 24/7 support',
         'Custom exports'
-      ]),
+      ],
       status: 'active',
-      created_at: '2026-01-05 00:00:00',
-      updated_at: '2026-01-05 00:00:00'
+      created_at: '2026-01-05 00:00:00+00',
+      updated_at: '2026-01-05 00:00:00+00'
     }
   ];
 
@@ -199,11 +233,11 @@ function seedMemoryStore() {
       start_date: '2026-10-03',
       next_billing_date: '2026-11-03',
       expiry_date: '2026-11-03',
-      auto_renew: 1,
+      auto_renew: true,
       cancelled_at: null,
       cancellation_reason: null,
-      created_at: '2026-10-03 10:00:00',
-      updated_at: '2026-10-03 10:00:00'
+      created_at: '2026-10-03 10:00:00+00',
+      updated_at: '2026-10-03 10:00:00+00'
     },
     {
       id: 2,
@@ -214,11 +248,11 @@ function seedMemoryStore() {
       start_date: '2026-10-15',
       next_billing_date: '2026-11-15',
       expiry_date: '2026-11-15',
-      auto_renew: 1,
+      auto_renew: true,
       cancelled_at: null,
       cancellation_reason: null,
-      created_at: '2026-10-15 11:30:00',
-      updated_at: '2026-10-15 11:30:00'
+      created_at: '2026-10-15 11:30:00+00',
+      updated_at: '2026-10-15 11:30:00+00'
     },
     {
       id: 3,
@@ -229,11 +263,11 @@ function seedMemoryStore() {
       start_date: '2026-10-05',
       next_billing_date: '2026-11-05',
       expiry_date: '2026-11-05',
-      auto_renew: 1,
+      auto_renew: true,
       cancelled_at: null,
       cancellation_reason: null,
-      created_at: '2026-10-05 14:00:00',
-      updated_at: '2026-10-05 14:00:00'
+      created_at: '2026-10-05 14:00:00+00',
+      updated_at: '2026-10-05 14:00:00+00'
     },
     {
       id: 4,
@@ -244,11 +278,11 @@ function seedMemoryStore() {
       start_date: '2026-09-01',
       next_billing_date: '2026-10-01',
       expiry_date: '2026-10-01',
-      auto_renew: 0,
+      auto_renew: false,
       cancelled_at: null,
       cancellation_reason: null,
-      created_at: '2026-09-01 09:00:00',
-      updated_at: '2026-09-01 09:00:00'
+      created_at: '2026-09-01 09:00:00+00',
+      updated_at: '2026-09-01 09:00:00+00'
     },
     {
       id: 5,
@@ -259,11 +293,11 @@ function seedMemoryStore() {
       start_date: '2026-08-10',
       next_billing_date: '2026-09-10',
       expiry_date: '2026-09-10',
-      auto_renew: 0,
-      cancelled_at: '2026-09-08 17:00:00',
+      auto_renew: false,
+      cancelled_at: '2026-09-08 17:00:00+00',
       cancellation_reason: 'Project downsizing and budget reallocation',
-      created_at: '2026-08-10 12:00:00',
-      updated_at: '2026-09-08 17:00:00'
+      created_at: '2026-08-10 12:00:00+00',
+      updated_at: '2026-09-08 17:00:00+00'
     }
   ];
 
@@ -281,9 +315,9 @@ function seedMemoryStore() {
       due_date: '2026-10-10',
       payment_status: 'paid',
       invoice_type: 'subscription_new',
-      paid_at: '2026-10-03 10:05:00',
-      created_at: '2026-10-03 10:00:00',
-      updated_at: '2026-10-03 10:05:00'
+      paid_at: '2026-10-03 10:05:00+00',
+      created_at: '2026-10-03 10:00:00+00',
+      updated_at: '2026-10-03 10:05:00+00'
     },
     {
       id: 2,
@@ -298,9 +332,9 @@ function seedMemoryStore() {
       due_date: '2026-10-22',
       payment_status: 'paid',
       invoice_type: 'subscription_new',
-      paid_at: '2026-10-15 11:35:00',
-      created_at: '2026-10-15 11:30:00',
-      updated_at: '2026-10-15 11:35:00'
+      paid_at: '2026-10-15 11:35:00+00',
+      created_at: '2026-10-15 11:30:00+00',
+      updated_at: '2026-10-15 11:35:00+00'
     },
     {
       id: 3,
@@ -315,9 +349,9 @@ function seedMemoryStore() {
       due_date: '2026-10-12',
       payment_status: 'paid',
       invoice_type: 'subscription_new',
-      paid_at: '2026-10-05 14:10:00',
-      created_at: '2026-10-05 14:00:00',
-      updated_at: '2026-10-05 14:10:00'
+      paid_at: '2026-10-05 14:10:00+00',
+      created_at: '2026-10-05 14:00:00+00',
+      updated_at: '2026-10-05 14:10:00+00'
     },
     {
       id: 4,
@@ -333,8 +367,8 @@ function seedMemoryStore() {
       payment_status: 'pending',
       invoice_type: 'subscription_renewal',
       paid_at: null,
-      created_at: '2026-10-27 00:00:00',
-      updated_at: '2026-10-27 00:00:00'
+      created_at: '2026-10-27 00:00:00+00',
+      updated_at: '2026-10-27 00:00:00+00'
     },
     {
       id: 5,
@@ -350,8 +384,8 @@ function seedMemoryStore() {
       payment_status: 'overdue',
       invoice_type: 'subscription_renewal',
       paid_at: null,
-      created_at: '2026-10-01 00:00:00',
-      updated_at: '2026-10-01 00:00:00'
+      created_at: '2026-10-01 00:00:00+00',
+      updated_at: '2026-10-01 00:00:00+00'
     },
     {
       id: 6,
@@ -367,8 +401,8 @@ function seedMemoryStore() {
       payment_status: 'pending',
       invoice_type: 'subscription_renewal',
       paid_at: null,
-      created_at: '2026-10-29 00:00:00',
-      updated_at: '2026-10-29 00:00:00'
+      created_at: '2026-10-29 00:00:00+00',
+      updated_at: '2026-10-29 00:00:00+00'
     }
   ];
 
@@ -379,13 +413,13 @@ function seedMemoryStore() {
       user_id: 2,
       invoice_id: 1,
       amount: 86.90,
-      payment_date: '2026-10-03 10:05:00',
+      payment_date: '2026-10-03 10:05:00+00',
       payment_method: 'Credit Card',
       transaction_reference: 'TXN-SIM-901823901',
       payment_status: 'successful',
-      gateway_response: JSON.stringify({ auth_code: 'AUTH98213', card_brand: 'Visa', last4: '4242', gateway: 'Brightloop Simulated Gateway' }),
-      created_at: '2026-10-03 10:05:00',
-      updated_at: '2026-10-03 10:05:00'
+      gateway_response: { auth_code: 'AUTH98213', card_brand: 'Visa', last4: '4242', gateway: 'Brightloop Simulated Gateway' },
+      created_at: '2026-10-03 10:05:00+00',
+      updated_at: '2026-10-03 10:05:00+00'
     },
     {
       id: 2,
@@ -393,13 +427,13 @@ function seedMemoryStore() {
       user_id: 3,
       invoice_id: 2,
       amount: 218.90,
-      payment_date: '2026-10-15 11:35:00',
+      payment_date: '2026-10-15 11:35:00+00',
       payment_method: 'Net Banking',
       transaction_reference: 'TXN-SIM-783921045',
       payment_status: 'successful',
-      gateway_response: JSON.stringify({ auth_code: 'AUTH11244', bank_name: 'Chase Commercial', gateway: 'Brightloop Simulated Gateway' }),
-      created_at: '2026-10-15 11:35:00',
-      updated_at: '2026-10-15 11:35:00'
+      gateway_response: { auth_code: 'AUTH11244', bank_name: 'Chase Commercial', gateway: 'Brightloop Simulated Gateway' },
+      created_at: '2026-10-15 11:35:00+00',
+      updated_at: '2026-10-15 11:35:00+00'
     },
     {
       id: 3,
@@ -407,13 +441,13 @@ function seedMemoryStore() {
       user_id: 4,
       invoice_id: 3,
       amount: 31.90,
-      payment_date: '2026-10-05 14:10:00',
+      payment_date: '2026-10-05 14:10:00+00',
       payment_method: 'UPI',
       transaction_reference: 'TXN-SIM-662391084',
       payment_status: 'successful',
-      gateway_response: JSON.stringify({ auth_code: 'AUTH66712', vpa: 'elena@okaxis', gateway: 'Brightloop Simulated Gateway' }),
-      created_at: '2026-10-05 14:10:00',
-      updated_at: '2026-10-05 14:10:00'
+      gateway_response: { auth_code: 'AUTH66712', vpa: 'elena@okaxis', gateway: 'Brightloop Simulated Gateway' },
+      created_at: '2026-10-05 14:10:00+00',
+      updated_at: '2026-10-05 14:10:00+00'
     }
   ];
 
@@ -424,10 +458,10 @@ function seedMemoryStore() {
       invoice_id: 4,
       previous_billing_date: '2026-10-03',
       new_billing_date: '2026-11-03',
-      renewal_date: '2026-10-27 00:00:00',
+      renewal_date: '2026-10-27 00:00:00+00',
       renewal_status: 'scheduled',
       notes: 'Automated renewal invoice generated 7 days ahead of expiry.',
-      created_at: '2026-10-27 00:00:00'
+      created_at: '2026-10-27 00:00:00+00'
     },
     {
       id: 2,
@@ -435,10 +469,10 @@ function seedMemoryStore() {
       invoice_id: 6,
       previous_billing_date: '2026-10-05',
       new_billing_date: '2026-11-05',
-      renewal_date: '2026-10-29 00:00:00',
+      renewal_date: '2026-10-29 00:00:00+00',
       renewal_status: 'scheduled',
       notes: 'Automated renewal invoice generated 7 days ahead of expiry.',
-      created_at: '2026-10-29 00:00:00'
+      created_at: '2026-10-29 00:00:00+00'
     }
   ];
 
@@ -454,74 +488,37 @@ function seedMemoryStore() {
 
 seedMemoryStore();
 
-// Attempt MySQL connection
-async function initDbConnection() {
-  if (useFallback) {
-    console.log('[DB] Using smart relational fallback store.');
-    return;
-  }
-
-  try {
-    pool = mysql.createPool({
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '3306'),
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'brightloop_subscriptions',
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-      connectTimeout: 2000
-    });
-
-    const conn = await pool.getConnection();
-    console.log('[DB] Connected to MySQL database successfully!');
-    conn.release();
-  } catch (err) {
-    console.warn(`[DB] MySQL connection notice: ${err.message}.`);
-    console.log('[DB] Seamlessly activated high-performance relational fallback store for hackathon evaluation.');
-    useFallback = true;
-  }
-}
-
-initDbConnection();
-
-// Smart query executor
+// Query Executor supporting Supabase PG direct or fallback store
 async function query(sql, params = []) {
-  if (!useFallback && pool) {
+  if (pgPool && !useFallback) {
     try {
-      return await pool.query(sql, params);
+      // Convert ? to $1, $2, ... for PostgreSQL
+      let paramIdx = 1;
+      const pgSql = sql.replace(/\?/g, () => `$${paramIdx++}`);
+      const res = await pgPool.query(pgSql, params);
+      return [res.rows, res.fields];
     } catch (err) {
-      console.error('[DB Query Error in MySQL]', err.message);
+      console.error('[Supabase PG Error]', err.message);
       throw err;
     }
   }
 
-  // Fallback SQL emulator handles all queries safely
   return executeFallbackQuery(sql, params);
 }
 
-// Fallback SQL query engine for in-memory store
 function executeFallbackQuery(sql, params = []) {
   const cleanSql = sql.trim().replace(/\s+/g, ' ');
   const lowerSql = cleanSql.toLowerCase();
 
-  // 1. SELECT queries
   if (lowerSql.startsWith('select')) {
     return handleSelect(cleanSql, params);
   }
-
-  // 2. INSERT queries
   if (lowerSql.startsWith('insert into')) {
     return handleInsert(cleanSql, params);
   }
-
-  // 3. UPDATE queries
   if (lowerSql.startsWith('update')) {
     return handleUpdate(cleanSql, params);
   }
-
-  // 4. DELETE queries
   if (lowerSql.startsWith('delete from')) {
     return handleDelete(cleanSql, params);
   }
@@ -533,21 +530,18 @@ function handleSelect(sql, params) {
   let paramIdx = 0;
   const getNextParam = () => params[paramIdx++];
 
-  // Users select by email
   if (/from users/i.test(sql) && /where email\s*=\s*\?/i.test(sql)) {
     const email = getNextParam();
     const rows = store.users.filter(u => u.email.toLowerCase() === String(email).toLowerCase());
     return [rows.map(r => ({ ...r })), []];
   }
 
-  // Users select by id
   if (/from users/i.test(sql) && /where id\s*=\s*\?/i.test(sql)) {
     const id = Number(getNextParam());
     const rows = store.users.filter(u => u.id === id);
     return [rows.map(r => ({ ...r })), []];
   }
 
-  // All users / customers
   if (/from users/i.test(sql)) {
     let rows = [...store.users];
     if (/where role\s*=\s*\?/i.test(sql)) {
@@ -564,7 +558,6 @@ function handleSelect(sql, params) {
     }), []];
   }
 
-  // Subscription Plans
   if (/from subscription_plans/i.test(sql)) {
     let rows = [...store.subscription_plans];
     if (/where id\s*=\s*\?/i.test(sql)) {
@@ -582,7 +575,6 @@ function handleSelect(sql, params) {
     return [rows.map(r => ({ ...r })), []];
   }
 
-  // Subscriptions with Join
   if (/from subscriptions/i.test(sql)) {
     let rows = store.subscriptions.map(s => {
       const user = store.users.find(u => u.id === s.user_id) || {};
@@ -618,7 +610,6 @@ function handleSelect(sql, params) {
     return [rows, []];
   }
 
-  // Invoices with Join
   if (/from invoices/i.test(sql)) {
     let rows = store.invoices.map(inv => {
       const user = store.users.find(u => u.id === inv.user_id) || {};
@@ -640,9 +631,6 @@ function handleSelect(sql, params) {
     } else if (/user_id\s*=\s*\?/i.test(sql) || /inv\.user_id\s*=\s*\?/i.test(sql)) {
       const uid = Number(getNextParam());
       rows = rows.filter(r => r.user_id === uid);
-    } else if (/invoice_number\s*=\s*\?/i.test(sql)) {
-      const invNum = getNextParam();
-      rows = rows.filter(r => r.invoice_number === invNum);
     }
 
     if (/payment_status\s*=\s*\?/i.test(sql)) {
@@ -657,7 +645,6 @@ function handleSelect(sql, params) {
     return [rows, []];
   }
 
-  // Payments with Join
   if (/from payments/i.test(sql)) {
     let rows = store.payments.map(p => {
       const user = store.users.find(u => u.id === p.user_id) || {};
@@ -690,7 +677,6 @@ function handleSelect(sql, params) {
     return [rows, []];
   }
 
-  // Renewal History
   if (/from renewal_history/i.test(sql)) {
     let rows = store.renewal_history.map(rh => {
       const sub = store.subscriptions.find(s => s.id === rh.subscription_id) || {};
@@ -722,11 +708,10 @@ function handleSelect(sql, params) {
 }
 
 function handleInsert(sql, params) {
-  const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  const now = new Date().toISOString();
 
   if (/insert into users/i.test(sql)) {
     const id = store.autoInc.users++;
-    // (name, email, password, role, company_name, phone, address, status)
     const newUser = {
       id,
       name: params[0],
@@ -752,7 +737,7 @@ function handleInsert(sql, params) {
       description: params[1],
       price: parseFloat(params[2]),
       billing_cycle: params[3],
-      features: typeof params[4] === 'string' ? params[4] : JSON.stringify(params[4]),
+      features: Array.isArray(params[4]) ? params[4] : (typeof params[4] === 'string' ? JSON.parse(params[4]) : params[4]),
       status: params[5] || 'active',
       created_at: now,
       updated_at: now
@@ -763,7 +748,6 @@ function handleInsert(sql, params) {
 
   if (/insert into subscriptions/i.test(sql)) {
     const id = store.autoInc.subscriptions++;
-    // (subscription_code, user_id, plan_id, status, start_date, next_billing_date, expiry_date, auto_renew)
     const newSub = {
       id,
       subscription_code: params[0],
@@ -773,7 +757,7 @@ function handleInsert(sql, params) {
       start_date: params[4],
       next_billing_date: params[5],
       expiry_date: params[6],
-      auto_renew: params[7] === undefined ? 1 : (params[7] ? 1 : 0),
+      auto_renew: !!params[7],
       cancelled_at: null,
       cancellation_reason: null,
       created_at: now,
@@ -785,7 +769,6 @@ function handleInsert(sql, params) {
 
   if (/insert into invoices/i.test(sql)) {
     const id = store.autoInc.invoices++;
-    // (invoice_number, subscription_id, user_id, plan_name, amount, tax_amount, total_amount, invoice_date, due_date, payment_status, invoice_type)
     const newInv = {
       id,
       invoice_number: params[0],
@@ -809,7 +792,6 @@ function handleInsert(sql, params) {
 
   if (/insert into payments/i.test(sql)) {
     const id = store.autoInc.payments++;
-    // (payment_code, user_id, invoice_id, amount, payment_date, payment_method, transaction_reference, payment_status, gateway_response)
     const newPay = {
       id,
       payment_code: params[0],
@@ -820,7 +802,7 @@ function handleInsert(sql, params) {
       payment_method: params[5],
       transaction_reference: params[6],
       payment_status: params[7],
-      gateway_response: typeof params[8] === 'string' ? params[8] : JSON.stringify(params[8] || {}),
+      gateway_response: typeof params[8] === 'string' ? JSON.parse(params[8]) : (params[8] || {}),
       created_at: now,
       updated_at: now
     };
@@ -830,7 +812,6 @@ function handleInsert(sql, params) {
 
   if (/insert into renewal_history/i.test(sql)) {
     const id = store.autoInc.renewal_history++;
-    // (subscription_id, invoice_id, previous_billing_date, new_billing_date, renewal_date, renewal_status, notes)
     const newRenew = {
       id,
       subscription_id: Number(params[0]),
@@ -850,9 +831,8 @@ function handleInsert(sql, params) {
 }
 
 function handleUpdate(sql, params) {
-  const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  const now = new Date().toISOString();
 
-  // Update Users profile / status
   if (/update users/i.test(sql)) {
     const id = Number(params[params.length - 1]);
     const user = store.users.find(u => u.id === id);
@@ -870,7 +850,6 @@ function handleUpdate(sql, params) {
     }
   }
 
-  // Update subscription_plans
   if (/update subscription_plans/i.test(sql)) {
     const id = Number(params[params.length - 1]);
     const plan = store.subscription_plans.find(p => p.id === id);
@@ -878,12 +857,11 @@ function handleUpdate(sql, params) {
       if (/status\s*=\s*\?/i.test(sql) && params.length === 2) {
         plan.status = params[0];
       } else {
-        // (name, description, price, billing_cycle, features, status, id)
         plan.name = params[0];
         plan.description = params[1];
         plan.price = parseFloat(params[2]);
         plan.billing_cycle = params[3];
-        plan.features = typeof params[4] === 'string' ? params[4] : JSON.stringify(params[4]);
+        plan.features = Array.isArray(params[4]) ? params[4] : (typeof params[4] === 'string' ? JSON.parse(params[4]) : params[4]);
         plan.status = params[5];
       }
       plan.updated_at = now;
@@ -891,7 +869,6 @@ function handleUpdate(sql, params) {
     }
   }
 
-  // Update subscriptions
   if (/update subscriptions/i.test(sql)) {
     const id = Number(params[params.length - 1]);
     const sub = store.subscriptions.find(s => s.id === id);
@@ -900,22 +877,19 @@ function handleUpdate(sql, params) {
         sub.status = params[0];
         sub.cancelled_at = params[1];
         sub.cancellation_reason = params[2];
-        sub.auto_renew = 0;
+        sub.auto_renew = false;
       } else if (/status\s*=\s*\?/i.test(sql) && /next_billing_date\s*=\s*\?/i.test(sql)) {
         sub.status = params[0];
         sub.next_billing_date = params[1];
         sub.expiry_date = params[2];
       } else if (/status\s*=\s*\?/i.test(sql) && params.length === 2) {
         sub.status = params[0];
-      } else if (/auto_renew\s*=\s*\?/i.test(sql)) {
-        sub.auto_renew = params[0] ? 1 : 0;
       }
       sub.updated_at = now;
       return [{ affectedRows: 1 }, []];
     }
   }
 
-  // Update invoices
   if (/update invoices/i.test(sql)) {
     const id = Number(params[params.length - 1]);
     const inv = store.invoices.find(i => i.id === id);
@@ -931,7 +905,6 @@ function handleUpdate(sql, params) {
     }
   }
 
-  // Update payments
   if (/update payments/i.test(sql)) {
     const id = Number(params[params.length - 1]);
     const pay = store.payments.find(p => p.id === id);
@@ -957,33 +930,9 @@ function handleDelete(sql, params) {
   return [{ affectedRows: 0 }, []];
 }
 
-// Database init runner for real MySQL
-async function runSchemaAndSeedOnMySQL() {
-  if (!pool) return false;
-  try {
-    const schemaSql = fs.readFileSync(path.join(__dirname, '../../database/schema.sql'), 'utf8');
-    const seedSql = fs.readFileSync(path.join(__dirname, '../../database/seed.sql'), 'utf8');
-
-    const schemaStatements = schemaSql.split(';').map(s => s.trim()).filter(s => s.length > 0);
-    for (const stmt of schemaStatements) {
-      await pool.query(stmt);
-    }
-
-    const seedStatements = seedSql.split(';').map(s => s.trim()).filter(s => s.length > 0);
-    for (const stmt of seedStatements) {
-      await pool.query(stmt);
-    }
-    console.log('[DB] Schema and seed successfully executed on MySQL!');
-    return true;
-  } catch (err) {
-    console.error('[DB] Error initializing MySQL tables:', err.message);
-    return false;
-  }
-}
-
 module.exports = {
   query,
-  runSchemaAndSeedOnMySQL,
+  getSupabase: () => supabase,
   isUsingFallback: () => useFallback,
   getStore: () => store
 };

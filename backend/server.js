@@ -35,7 +35,7 @@ app.get('/api/health', (req, res) => {
     system: 'Brightloop Subscription Management System API',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
-    databaseMode: db.isUsingFallback() ? 'Embedded Relational Engine' : 'MySQL Database Engine'
+    databaseMode: db.isUsingFallback() ? 'Embedded Relational Engine' : 'Supabase Database Engine'
   });
 });
 
