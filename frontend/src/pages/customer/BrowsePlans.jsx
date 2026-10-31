@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
@@ -6,7 +6,7 @@ import Toast from '../../components/common/Toast';
 import SubscribeModal from '../../components/subscriptions/SubscribeModal';
 import PaymentModal from '../../components/payments/PaymentModal';
 import { plansApi, subscriptionsApi } from '../../services/api';
-import { Check, Sparkles, Zap, Shield, Star } from 'lucide-react';
+import { Check, Sparkles, Zap, Shield, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function BrowsePlans({ onNavigate }) {
   const [plans, setPlans] = useState([]);
@@ -60,6 +60,20 @@ export default function BrowsePlans({ onNavigate }) {
     }, 1200);
   };
 
+  const scrollContainerRef = useRef(null);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -340, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 340, behavior: 'smooth' });
+    }
+  };
+
   if (loading) return <Loading message="Loading subscription tiers..." />;
 
   return (
@@ -79,31 +93,55 @@ export default function BrowsePlans({ onNavigate }) {
           Automate subscription lifecycle, receive itemized invoices, and enjoy seamless renewals.
         </p>
 
-        {/* Billing cycle tabs */}
-        <div className="mt-6 inline-flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200">
-          {[
-            { id: 'all', label: 'All Tiers' },
-            { id: 'monthly', label: 'Monthly' },
-            { id: 'yearly', label: 'Annual (Save 15%)' }
-          ].map(tab => (
+        {/* Billing cycle tabs & Scroll controls */}
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="inline-flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200">
+            {[
+              { id: 'all', label: 'All Tiers' },
+              { id: 'monthly', label: 'Monthly' },
+              { id: 'yearly', label: 'Annual (Save 15%)' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setCycleFilter(tab.id)}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  cycleFilter === tab.id
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
-              key={tab.id}
               type="button"
-              onClick={() => setCycleFilter(tab.id)}
-              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                cycleFilter === tab.id
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              onClick={scrollLeft}
+              title="Scroll left"
+              className="p-2 rounded-lg hover:bg-white text-slate-600 hover:text-slate-900 transition-colors shadow-xs"
             >
-              {tab.label}
+              <ChevronLeft className="h-4 w-4" />
             </button>
-          ))}
+            <button
+              type="button"
+              onClick={scrollRight}
+              title="Scroll right"
+              className="p-2 rounded-lg hover:bg-white text-slate-600 hover:text-slate-900 transition-colors shadow-xs"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Pricing Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
+      {/* Pricing Cards Horizontal Scroll Row */}
+      <div
+        ref={scrollContainerRef}
+        className="flex flex-nowrap items-stretch gap-6 overflow-x-auto pb-6 pt-4 px-1 horizontal-plans-scroll scroll-smooth"
+      >
         {filteredPlans.map((plan) => {
           const isPopular = plan.name.toLowerCase().includes('professional');
           const features = Array.isArray(plan.features) ? plan.features : [];
@@ -111,7 +149,7 @@ export default function BrowsePlans({ onNavigate }) {
           return (
             <div
               key={plan.id}
-              className={`relative bg-white rounded-3xl border transition-all duration-200 flex flex-col justify-between ${
+              className={`w-[300px] min-w-[300px] max-w-[320px] flex-shrink-0 relative bg-white rounded-3xl border transition-all duration-200 flex flex-col justify-between ${
                 isPopular
                   ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-xl shadow-brand-500/10'
                   : 'border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md'

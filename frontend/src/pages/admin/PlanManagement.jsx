@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
@@ -7,7 +7,7 @@ import Modal from '../../components/common/Modal';
 import Toast from '../../components/common/Toast';
 import Loading from '../../components/common/Loading';
 import { plansApi } from '../../services/api';
-import { Plus, Edit2, Trash2, Check, Sparkles, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, Sparkles, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function PlanManagement() {
   const [plans, setPlans] = useState([]);
@@ -133,6 +133,20 @@ export default function PlanManagement() {
     }
   };
 
+  const scrollContainerRef = useRef(null);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+    }
+  };
+
   if (loading) return <Loading message="Loading subscription plans..." />;
 
   return (
@@ -141,31 +155,61 @@ export default function PlanManagement() {
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Subscription Plan Management</h2>
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight">Subscription Plan Management</h2>
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+              {plans.length} {plans.length === 1 ? 'Tier' : 'Tiers'}
+            </span>
+          </div>
           <p className="text-xs text-slate-500 mt-1">
-            Configure pricing tiers, features, billing intervals, and activation statuses.
+            Configure pricing tiers, features, billing intervals, and activation statuses. Scroll horizontally to view all plans.
           </p>
         </div>
 
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          icon={Plus}
-          onClick={handleOpenCreate}
-        >
-          Add New Plan
-        </Button>
+        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+          {/* Scroll navigation buttons */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button
+              type="button"
+              onClick={scrollLeft}
+              title="Scroll left"
+              className="p-1.5 rounded-lg hover:bg-white text-slate-600 hover:text-slate-900 transition-colors shadow-xs"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={scrollRight}
+              title="Scroll right"
+              className="p-1.5 rounded-lg hover:bg-white text-slate-600 hover:text-slate-900 transition-colors shadow-xs"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            icon={Plus}
+            onClick={handleOpenCreate}
+          >
+            Add New Plan
+          </Button>
+        </div>
       </div>
 
-      {/* Plan Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Plan Cards Horizontal Scroll Row */}
+      <div
+        ref={scrollContainerRef}
+        className="flex flex-nowrap items-stretch gap-5 overflow-x-auto pb-5 pt-1 px-1 horizontal-plans-scroll scroll-smooth"
+      >
         {plans.map((plan) => {
           const features = Array.isArray(plan.features) ? plan.features : [];
           return (
             <div
               key={plan.id}
-              className={`bg-white rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
+              className={`w-[290px] min-w-[290px] max-w-[310px] flex-shrink-0 bg-white rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
                 plan.status === 'active'
                   ? 'border-slate-200 shadow-xs hover:border-brand-300 hover:shadow-md'
                   : 'border-slate-200 opacity-60 bg-slate-50/50'
