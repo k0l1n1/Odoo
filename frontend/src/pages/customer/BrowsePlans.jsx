@@ -64,7 +64,7 @@ export default function BrowsePlans({ onNavigate }) {
   const [isMouseDown, setIsMouseDown] = useState(false);
   const dragStartRef = useRef({ x: 0, scrollLeft: 0 });
 
-  // Enable mouse wheel horizontal scrolling
+  // Enable high-sensitivity mouse wheel horizontal scrolling
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
@@ -72,7 +72,7 @@ export default function BrowsePlans({ onNavigate }) {
     const onWheel = (e) => {
       if (e.deltaY !== 0) {
         e.preventDefault();
-        el.scrollLeft += e.deltaY * 1.2;
+        el.scrollLeft += e.deltaY * 2.8;
       }
     };
 
@@ -92,7 +92,7 @@ export default function BrowsePlans({ onNavigate }) {
   const handleMouseMove = (e) => {
     if (!isMouseDown || !scrollContainerRef.current) return;
     e.preventDefault();
-    const walk = (e.pageX - dragStartRef.current.x) * 1.5;
+    const walk = (e.pageX - dragStartRef.current.x) * 2.5;
     scrollContainerRef.current.scrollLeft = dragStartRef.current.scrollLeft - walk;
   };
 
@@ -102,13 +102,13 @@ export default function BrowsePlans({ onNavigate }) {
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -340, behavior: 'smooth' });
+      scrollContainerRef.current.scrollBy({ left: -420, behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 340, behavior: 'smooth' });
+      scrollContainerRef.current.scrollBy({ left: 420, behavior: 'smooth' });
     }
   };
 
