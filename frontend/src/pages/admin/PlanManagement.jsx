@@ -127,6 +127,7 @@ export default function PlanManagement() {
     try {
       await plansApi.delete(id);
       setToast({ type: 'success', message: 'Plan deleted successfully.' });
+      setPlans(prev => prev.filter(p => p.id !== id));
       fetchPlans();
     } catch (err) {
       setToast({ type: 'error', message: err.message || 'Failed to delete plan.' });

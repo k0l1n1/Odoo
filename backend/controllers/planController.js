@@ -136,7 +136,13 @@ const planController = {
       res.status(200).json({ success: true, message: 'Plan deleted successfully.' });
     } catch (err) {
       console.error('[Delete Plan Error]', err);
-      res.status(500).json({ success: false, message: 'Failed to delete plan.' });
+      if (err.code === '23503' || (err.message && err.message.includes('foreign key constraint'))) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot delete this plan because active or past customer subscriptions are linked to it. You can deactivate it instead.'
+        });
+      }
+      res.status(500).json({ success: false, message: 'Failed to delete plan: ' + (err.message || 'Server error') });
     }
   }
 };

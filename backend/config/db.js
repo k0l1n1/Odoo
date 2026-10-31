@@ -48,7 +48,7 @@ async function executeSupabaseDirect(sql, params) {
   const lower = cleanSql.toLowerCase();
 
   // 1. SELECT Users
-  if (lower.includes('from users')) {
+  if (lower.startsWith('select') && lower.includes('from users')) {
     if (lower.includes('email = ?')) {
       const { data, error } = await supabase.from('users').select('*').ilike('email', params[0]);
       if (error) throw error;
@@ -70,7 +70,7 @@ async function executeSupabaseDirect(sql, params) {
   }
 
   // 2. SELECT Subscription Plans
-  if (lower.includes('from subscription_plans')) {
+  if (lower.startsWith('select') && lower.includes('from subscription_plans')) {
     if (lower.includes('id = ?')) {
       const { data, error } = await supabase.from('subscription_plans').select('*').eq('id', params[0]);
       if (error) throw error;
@@ -87,7 +87,7 @@ async function executeSupabaseDirect(sql, params) {
   }
 
   // 3. SELECT Subscriptions
-  if (lower.includes('from subscriptions')) {
+  if (lower.startsWith('select') && lower.includes('from subscriptions')) {
     const { data: subs, error: subErr } = await supabase.from('subscriptions').select('*').order('id', { ascending: false });
     if (subErr) throw subErr;
 
@@ -129,7 +129,7 @@ async function executeSupabaseDirect(sql, params) {
   }
 
   // 4. SELECT Invoices
-  if (lower.includes('from invoices')) {
+  if (lower.startsWith('select') && lower.includes('from invoices')) {
     const { data: invs, error: invErr } = await supabase.from('invoices').select('*').order('id', { ascending: false });
     if (invErr) throw invErr;
 
@@ -163,7 +163,7 @@ async function executeSupabaseDirect(sql, params) {
   }
 
   // 5. SELECT Payments
-  if (lower.includes('from payments')) {
+  if (lower.startsWith('select') && lower.includes('from payments')) {
     const { data: pays, error: payErr } = await supabase.from('payments').select('*').order('id', { ascending: false });
     if (payErr) throw payErr;
 
@@ -196,7 +196,7 @@ async function executeSupabaseDirect(sql, params) {
   }
 
   // 6. SELECT Renewal History
-  if (lower.includes('from renewal_history')) {
+  if (lower.startsWith('select') && lower.includes('from renewal_history')) {
     const { data: renewals, error: renErr } = await supabase.from('renewal_history').select('*').order('id', { ascending: false });
     if (renErr) throw renErr;
 
@@ -457,6 +457,8 @@ async function executeSupabaseDirect(sql, params) {
     const id = Number(params[0]);
     const { error } = await supabase.from('subscription_plans').delete().eq('id', id);
     if (error) throw error;
+    const idx = store.subscription_plans.findIndex(p => p.id === id);
+    if (idx !== -1) store.subscription_plans.splice(idx, 1);
     return [{ affectedRows: 1 }, []];
   }
 
@@ -605,6 +607,14 @@ function executeFallbackQuery(sql, params = []) {
       if (lower.includes('paid_at')) inv.paid_at = params[1];
     }
     return [{ affectedRows: inv ? 1 : 0 }, []];
+  }
+
+  // Fallback DELETEs
+  if (lower.startsWith('delete from subscription_plans')) {
+    const id = Number(params[0]);
+    const idx = store.subscription_plans.findIndex(p => p.id === id);
+    if (idx !== -1) store.subscription_plans.splice(idx, 1);
+    return [{ affectedRows: 1 }, []];
   }
 
   return [{ affectedRows: 1, insertId: 1 }, []];
