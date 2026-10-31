@@ -107,4 +107,9 @@ export const staffApi = {
   remove: (id) => api.delete(`/staff/${id}`)
 };
 
+// AI Copilot & Navigation Help endpoints
+export const aiApi = {
+  getHelp: (data) => api.post('/ai/help', data)
+};
+
 export default api;

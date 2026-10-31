@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-export default function Sidebar({ currentPath, onNavigate, mobileOpen, setMobileOpen }) {
+export default function Sidebar({ currentPath, onNavigate, mobileOpen, setMobileOpen, onOpenAiHelp }) {
   const { user, isAdmin, isStaff, isStaffOrAdmin, logout } = useAuth();
 
   const adminNav = [
@@ -122,6 +122,30 @@ export default function Sidebar({ currentPath, onNavigate, mobileOpen, setMobile
             );
           })}
         </nav>
+
+        {/* AI Help Copilot Quick Action Card */}
+        {onOpenAiHelp && (
+          <div className="px-3 pb-3">
+            <button
+              type="button"
+              onClick={() => {
+                onOpenAiHelp();
+                if (setMobileOpen) setMobileOpen(false);
+              }}
+              className="w-full text-left p-3 rounded-xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-brand-500/10 border border-indigo-200/80 hover:border-indigo-300 transition-all hover:shadow-xs group cursor-pointer"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <div className="h-6 w-6 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-xs">
+                  <Sparkles className="h-3.5 w-3.5 text-white" />
+                </div>
+                <span className="text-xs font-bold text-slate-800">Need Help?</span>
+              </div>
+              <p className="text-[11px] text-slate-500 group-hover:text-brand-700 transition-colors">
+                Ask AI Copilot to explain screen or navigate →
+              </p>
+            </button>
+          </div>
+        )}
 
         {/* User Card & Logout */}
         <div className="p-3 border-t border-slate-200 bg-slate-50/50">

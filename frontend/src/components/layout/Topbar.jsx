@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Menu, Zap, Shield, User, ArrowLeftRight, Check, ChevronDown } from 'lucide-react';
+import { Menu, Zap, Shield, User, ArrowLeftRight, Check, ChevronDown, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-export default function Topbar({ title, subtitle, onToggleMobile }) {
+export default function Topbar({ title, subtitle, onToggleMobile, onOpenAiHelp }) {
   const { user, isAdmin, isStaff, login } = useAuth();
   const [switching, setSwitching] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -51,7 +51,18 @@ export default function Topbar({ title, subtitle, onToggleMobile }) {
       </div>
 
       {/* Right Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
+        {/* AI Help Copilot Trigger */}
+        <button
+          type="button"
+          onClick={onOpenAiHelp}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-gradient-to-r from-brand-50 via-indigo-50 to-purple-50 hover:from-brand-100 hover:to-purple-100 text-xs font-semibold text-indigo-700 transition-all shadow-2xs hover:scale-[1.02] active:scale-98 cursor-pointer"
+          title="Open Brightloop AI Copilot"
+        >
+          <Sparkles className="h-3.5 w-3.5 text-indigo-600 animate-pulse" />
+          <span>AI Help</span>
+        </button>
+
         {/* Quick Demo Switcher Widget */}
         <div className="relative">
           <button
