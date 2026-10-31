@@ -1,3 +1,4 @@
+const db = require('../config/db');
 const Payment = require('../models/Payment');
 const Invoice = require('../models/Invoice');
 const Subscription = require('../models/Subscription');
@@ -62,21 +63,54 @@ const paymentService = {
         if (sub.status === 'pending' || invoice.invoice_type === 'subscription_new') {
           // New subscription activation
           await Subscription.updateStatus(sub.id, 'active');
+
+          // Ensure ONLY ONE active subscription exists per customer:
+          // Cancel any other active or pending subscriptions for this user
+          try {
+            const [userSubs] = await db.query(
+              'SELECT s.id, s.subscription_code FROM subscriptions s WHERE s.user_id = ?',
+              [userId]
+            );
+            for (const other of (userSubs || [])) {
+              if (other.id !== sub.id) {
+                await Subscription.cancel(other.id, `Superseded by active subscription ${sub.subscription_code}`);
+                // Void/fail any pending invoices for superseded subscription
+                const [otherInvs] = await db.query(
+                  'SELECT id FROM invoices WHERE subscription_id = ?',
+                  [other.id]
+                );
+                for (const oi of (otherInvs || [])) {
+                  await Invoice.updatePaymentStatus(oi.id, 'failed');
+                }
+              }
+            }
+          } catch (cleanupErr) {
+            console.warn('[Payment Cleanup Error]', cleanupErr.message);
+          }
         } else if (invoice.invoice_type === 'subscription_renewal') {
           // Subscription renewal processing
-          const { nextBillingDate, expiryDate } = calculateBillingDates(sub.next_billing_date, sub.billing_cycle);
-          await Subscription.updateBillingDates(sub.id, 'active', nextBillingDate, expiryDate);
+          // Check if subscription was cancelled or if user already has another active subscription
+          const currentActive = await Subscription.getActiveByUserId(userId);
+          const wasCancelled = sub.status === 'cancelled' || !!sub.cancelled_at;
 
-          // Record in renewal history
-          await RenewalHistory.create({
-            subscription_id: sub.id,
-            invoice_id: invoice.id,
-            previous_billing_date: sub.next_billing_date,
-            new_billing_date: nextBillingDate,
-            renewal_date: now,
-            renewal_status: 'processed',
-            notes: `Successfully renewed via ${paymentMethod} (${txnRef}). Next billing date set to ${nextBillingDate}.`
-          });
+          if (wasCancelled || (currentActive && currentActive.id !== sub.id)) {
+            // Do NOT reactivate old subscription into a second concurrent active subscription
+            console.log(`[Payment] Subscription ${sub.id} was superseded or cancelled. Keeping it non-active.`);
+          } else {
+            const { nextBillingDate, expiryDate } = calculateBillingDates(sub.next_billing_date, sub.billing_cycle);
+            await Subscription.updateBillingDates(sub.id, 'active', nextBillingDate, expiryDate);
+
+            // Record in renewal history
+            await RenewalHistory.create({
+              subscription_id: sub.id,
+              invoice_id: invoice.id,
+              previous_billing_date: sub.next_billing_date,
+              new_billing_date: nextBillingDate,
+              renewal_date: now,
+              renewal_status: 'processed',
+              notes: `Successfully renewed via ${paymentMethod} (${txnRef}). Next billing date set to ${nextBillingDate}.`
+            });
+          }
         }
       }
 

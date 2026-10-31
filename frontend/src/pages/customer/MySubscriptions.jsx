@@ -33,8 +33,18 @@ export default function MySubscriptions({ onNavigate }) {
 
   if (loading) return <Loading message="Loading your subscriptions..." />;
 
-  const activeSubs = subscriptions.filter(s => s.status === 'active' || s.status === 'pending');
-  const pastSubs = subscriptions.filter(s => s.status === 'expired' || s.status === 'cancelled');
+  // Ensure only the latest active non-cancelled subscription is shown as current
+  const activeCandidates = subscriptions
+    .filter(s => (s.status === 'active' || s.status === 'pending') && !s.cancelled_at)
+    .sort((a, b) => b.id - a.id);
+
+  const activeSubs = activeCandidates.slice(0, 1);
+  const supersededSubs = activeCandidates.slice(1);
+
+  const pastSubs = [
+    ...supersededSubs,
+    ...subscriptions.filter(s => s.status === 'expired' || s.status === 'cancelled' || !!s.cancelled_at)
+  ];
 
   return (
     <div className="space-y-6">

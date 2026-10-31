@@ -119,12 +119,18 @@ const dashboardController = {
     try {
       const userId = req.user.id;
       const subscriptions = await Subscription.getByUserId(userId);
-      const activeSubscription = subscriptions.find(s => s.status === 'active') || null;
+      // Only consider non-cancelled active or pending subscriptions
+      const activeSubscription = subscriptions.find(s => (s.status === 'active' || s.status === 'pending') && !s.cancelled_at) || null;
       const invoices = await Invoice.getByUserId(userId);
       const payments = await Payment.getByUserId(userId);
       const availablePlans = await Plan.getActive();
 
-      const pendingInvoices = invoices.filter(i => i.payment_status === 'pending' || i.payment_status === 'overdue');
+      // Only show pending invoices for active or current subscriptions
+      const activeSubIds = new Set(subscriptions.filter(s => !s.cancelled_at && s.status !== 'cancelled').map(s => s.id));
+      const pendingInvoices = invoices.filter(i => 
+        (i.payment_status === 'pending' || i.payment_status === 'overdue') &&
+        (activeSubIds.size === 0 || activeSubIds.has(i.subscription_id))
+      );
       const successfulPayments = payments.filter(p => p.payment_status === 'successful');
       const totalPaid = successfulPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
 

@@ -1,3 +1,4 @@
+const db = require('../config/db');
 const Subscription = require('../models/Subscription');
 const Plan = require('../models/Plan');
 const Invoice = require('../models/Invoice');
@@ -13,7 +14,15 @@ const subscriptionService = {
       if (existing.status === 'active') {
         throw new Error(`You already have an active subscription (${planName}). Please cancel or change it before subscribing to a new plan.`);
       } else {
-        throw new Error(`You already have a pending subscription (${planName}). Please complete payment or cancel it before subscribing to a new plan.`);
+        // Clean up previous unpaid pending subscription so user can subscribe to new plan
+        await Subscription.cancel(existing.id, 'Superseded by new subscription attempt');
+        const [oldInvs] = await db.query(
+          'SELECT id FROM invoices WHERE subscription_id = ?',
+          [existing.id]
+        );
+        for (const oi of (oldInvs || [])) {
+          await Invoice.updatePaymentStatus(oi.id, 'failed');
+        }
       }
     }
 
@@ -94,6 +103,20 @@ const subscriptionService = {
     }
 
     await Subscription.cancel(subscriptionId, reason);
+
+    // Cancel all pending invoices for this subscription so they cannot be paid later
+    try {
+      const [pendingInvs] = await db.query(
+        'SELECT id FROM invoices WHERE subscription_id = ?',
+        [subscriptionId]
+      );
+      for (const inv of (pendingInvs || [])) {
+        await Invoice.updatePaymentStatus(inv.id, 'failed');
+      }
+    } catch (invErr) {
+      console.warn('[Cancel Subscription] Failed to void pending invoices:', invErr.message);
+    }
+
     return await Subscription.getById(subscriptionId);
   },
 
